@@ -32,8 +32,7 @@ def get_gspread_client() -> gspread.Client:
     """
     if not Path(CREDENTIALS_FILE).exists():
         raise FileNotFoundError(
-            f"{CREDENTIALS_FILE} not found. "
-            "See OAUTH_SETUP.md for instructions."
+            f"{CREDENTIALS_FILE} not found. See OAUTH_SETUP.md for instructions."
         )
 
     creds = None
@@ -49,9 +48,7 @@ def get_gspread_client() -> gspread.Client:
             creds.refresh(Request())
         else:
             # Full OAuth flow (opens browser)
-            flow = InstalledAppFlow.from_client_secrets_file(
-                CREDENTIALS_FILE, SCOPES
-            )
+            flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_FILE, SCOPES)
             creds = flow.run_local_server(port=0)
 
         # Save token for future runs

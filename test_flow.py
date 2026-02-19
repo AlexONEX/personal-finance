@@ -1,15 +1,8 @@
 #!/usr/bin/env python3
-"""test_flow.py
-
-Testea toda la funcionalidad sin hacer setup (usa sheet existente).
-
-Usage:
-    uv run test_flow.py
-"""
 
 import os
 import sys
-from datetime import date, datetime
+from datetime import date
 import gspread
 from google.oauth2.service_account import Credentials
 from dotenv import load_dotenv
@@ -22,11 +15,12 @@ SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 SPREADSHEET_ID = os.environ.get("SPREADSHEET_ID")
 SERVICE_ACCOUNT = "service_account.json"
 
+
 def test_connection():
     """Test 1: Conexión a Google Sheets"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TEST 1: Conexión a Google Sheets")
-    print("="*60)
+    print("=" * 60)
 
     try:
         creds = Credentials.from_service_account_file(SERVICE_ACCOUNT, scopes=SCOPES)
@@ -47,9 +41,9 @@ def test_connection():
 
 def test_fetch_apis():
     """Test 2: APIs de datos (sin escribir)"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TEST 2: Fetch de APIs (CER + CCL)")
-    print("="*60)
+    print("=" * 60)
 
     since = date(2026, 2, 10)
     until = date(2026, 2, 19)
@@ -95,9 +89,9 @@ def test_fetch_apis():
 
 def test_historic_data(ss):
     """Test 3: Verificar historic_data sheet"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TEST 3: Verificar historic_data")
-    print("="*60)
+    print("=" * 60)
 
     try:
         ws = ss.worksheet("historic_data")
@@ -121,9 +115,9 @@ def test_historic_data(ss):
             last_3 = all_data[-3:]
             print("\nÚltimos 3 registros:")
             for row in last_3:
-                fecha = row[0] if len(row) > 0 else ''
-                cer = row[1] if len(row) > 1 else ''
-                ccl = row[2] if len(row) > 2 else ''
+                fecha = row[0] if len(row) > 0 else ""
+                cer = row[1] if len(row) > 1 else ""
+                ccl = row[2] if len(row) > 2 else ""
                 print(f"  {fecha:12} | CER: {cer:9} | CCL: {ccl}")
 
         return True
@@ -134,9 +128,9 @@ def test_historic_data(ss):
 
 def test_ingresos_sheet(ss):
     """Test 4: Verificar sheet Ingresos"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TEST 4: Verificar sheet 'Ingresos'")
-    print("="*60)
+    print("=" * 60)
 
     try:
         ws = ss.worksheet("Ingresos")
@@ -178,9 +172,9 @@ def test_ingresos_sheet(ss):
 
 def test_formulas(ss):
     """Test 5: Verificar que fórmulas funcionan"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TEST 5: Verificar fórmulas")
-    print("="*60)
+    print("=" * 60)
 
     try:
         ws = ss.worksheet("Ingresos")
@@ -207,7 +201,9 @@ def test_formulas(ss):
             if col in formula_cols and val and val != "#ERROR!":
                 calculated.append((col, val))
 
-        print(f"✓ Fórmulas calculando correctamente: {len(calculated)}/{len(formula_cols)}")
+        print(
+            f"✓ Fórmulas calculando correctamente: {len(calculated)}/{len(formula_cols)}"
+        )
 
         if calculated:
             print("\nSample de valores calculados:")
@@ -225,9 +221,9 @@ def main():
         print("ERROR: SPREADSHEET_ID not set in .env")
         sys.exit(1)
 
-    print("="*60)
+    print("=" * 60)
     print("TEST SUITE - Ingresos Tracker")
-    print("="*60)
+    print("=" * 60)
     print(f"Spreadsheet ID: {SPREADSHEET_ID}")
 
     # Run tests
@@ -242,9 +238,9 @@ def main():
     test_formulas(ss)
 
     # Summary
-    print("\n" + "="*60)
-    print("✅ TEST SUITE COMPLETO")
-    print("="*60)
+    print("\n" + "=" * 60)
+    print("TEST SUITE COMPLETO")
+    print("=" * 60)
     print("""
 Próximos pasos:
 1. Para actualizar datos: ./update_daily.sh

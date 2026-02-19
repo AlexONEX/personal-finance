@@ -22,7 +22,6 @@ import sys
 from collections import defaultdict
 from datetime import date, datetime
 
-import gspread
 from dotenv import load_dotenv
 
 from auth import get_gspread_client
@@ -128,7 +127,9 @@ def main() -> None:
     existing = len([v for v in ws_market.col_values(1)[FIRST_DATA_ROW - 1 :] if v])
     if existing > 0:
         end_row = FIRST_DATA_ROW + existing - 1
-        ws_market.batch_clear([f"A{FIRST_DATA_ROW}:B{end_row}", f"F{FIRST_DATA_ROW}:F{end_row}"])
+        ws_market.batch_clear(
+            [f"A{FIRST_DATA_ROW}:B{end_row}", f"F{FIRST_DATA_ROW}:F{end_row}"]
+        )
         print(f"  Cleared {existing} existing rows")
 
     # Prepare payload: only write Fecha (A), CER (B), CCL (F)
@@ -136,10 +137,12 @@ def main() -> None:
     payload_a_b = []
     payload_f = []
     for first_of_month, cer, ccl in monthly_data:
-        payload_a_b.append([
-            first_of_month.strftime("%d/%m/%Y"),
-            cer if cer is not None else "",
-        ])
+        payload_a_b.append(
+            [
+                first_of_month.strftime("%d/%m/%Y"),
+                cer if cer is not None else "",
+            ]
+        )
         payload_f.append([ccl if ccl is not None else ""])
 
     start = FIRST_DATA_ROW
