@@ -24,7 +24,7 @@ from datetime import date, datetime
 
 from dotenv import load_dotenv
 
-from auth import get_gspread_client
+from src.connectors.sheets import get_sheets_client
 
 load_dotenv()
 
@@ -94,7 +94,7 @@ def main() -> None:
         sys.exit(1)
 
     print("Connecting to Google Sheets...")
-    client = get_gspread_client()
+    client = get_sheets_client()
     spreadsheet = client.open_by_key(SPREADSHEET_ID)
 
     # Read historic_data

@@ -23,7 +23,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv, set_key
 
-from auth import get_gspread_client
+from src.connectors.sheets import get_sheets_client
 
 DEFAULT_SHEET_NAME = "Ingresos"
 DEFAULT_START_DATE = date(2022, 1, 1)
@@ -129,7 +129,7 @@ def main() -> None:
     # Step 2: OAuth authentication
     print("\n[1/5] Authenticating with Google...")
     try:
-        client = get_gspread_client()
+        client = get_sheets_client()
         print("✓ Authentication successful")
     except FileNotFoundError as e:
         print(f"\n✗ {e}", file=sys.stderr)

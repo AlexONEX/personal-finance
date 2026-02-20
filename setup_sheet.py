@@ -26,7 +26,7 @@ import sys
 import gspread
 from dotenv import load_dotenv
 
-from auth import get_gspread_client
+from src.connectors.sheets import get_sheets_client
 
 load_dotenv()
 
@@ -864,7 +864,7 @@ def setup() -> None:
         print("ERROR: SPREADSHEET_ID not set in .env", file=sys.stderr)
         sys.exit(1)
 
-    client = get_gspread_client()
+    client = get_sheets_client()
     spreadsheet = client.open_by_key(SPREADSHEET_ID)
 
     all_requests: list[dict] = []
