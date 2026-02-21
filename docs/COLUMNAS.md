@@ -19,45 +19,52 @@ Este documento describe todas las columnas de la hoja de cálculo "Ingresos".
 
 ## 2. INFLACIÓN (CER)
 
-*   **M - Δ % CER MoM**: Inflación mensual oficial según la variación del Coeficiente de Estabilización de Referencia.
-*   **N - Δ Sueldo MoM**: Variación porcentual de tu sueldo neto respecto al mes anterior.
-*   **O - Poder Adq. MoM**: Diferencia real entre tu aumento y la inflación del mes. (Positivo = ganaste, Negativo = perdiste).
-*   **P - Poder Adq. Acum.**: Variación del poder de compra real desde el primer registro (Neto vs CER acumulado).
+*   **M - Δ% CER MoM**: Inflación mensual oficial según la variación del Coeficiente de Estabilización de Referencia.
+*   **N - Δ Bruto MoM**: Variación porcentual de tu sueldo bruto respecto al mes anterior.
+*   **O - Poder Adq. Bruto MoM**: Diferencia real entre tu aumento de sueldo bruto y la inflación del mes.
+*   **P - Δ Neto MoM**: Variación porcentual de tu sueldo neto respecto al mes anterior.
+*   **Q - Poder Adq. Neto MoM**: Diferencia real entre tu aumento de sueldo neto y la inflación del mes.
 
-## 3. VS ÚLTIMO AUMENTO
+## 3. VS ÚLTIMO AUMENTO ARS
 
-*   **Q - Bruto Base**: El sueldo bruto que tenías en el momento del último cambio de sueldo.
-*   **R - CER Base**: Valor del CER en el momento del último aumento.
-*   **S - Atraso Real ARS**: % que debería subir tu sueldo hoy para igualar la inflación desde tu último aumento.
-*   **T - Paridad CER**: El sueldo bruto ideal que deberías cobrar hoy para empatar la inflación acumulada.
+*   **R - Bruto Base**: El sueldo bruto que tenías en el momento del último cambio de sueldo.
+*   **S - Neto Base**: El sueldo neto que tenías en el momento del último cambio de sueldo.
+*   **T - CER Base**: Valor del CER en el momento del último aumento.
+*   **U - Atraso Real (Bruto)**: % que debería subir tu sueldo bruto hoy para igualar la inflación desde tu último aumento.
+*   **V - Paridad CER (Bruto)**: El sueldo bruto ideal que deberías cobrar hoy para empatar la inflación acumulada.
+*   **W - Atraso Real (Neto)**: % que debería subir tu sueldo neto hoy para igualar la inflación desde tu último aumento.
+*   **X - Paridad CER (Neto)**: El sueldo neto ideal que deberías cobrar hoy para empatar la inflación acumulada.
+*   **Y - Poder Adq. vs Aumento**: Poder adquisitivo acumulado (Neto vs CER) desde el último aumento.
 
-## 4. ANÁLISIS TOTAL
+## 4. PROYECCIONES REM (Expectativas de Mercado)
 
-*   **U - Ingreso a Valor Hoy**: Tu sueldo pasado multiplicado por la inflación acumulada hasta hoy.
-*   **V - Δ Real vs Año Ant.**: Comparativa interanual móvil. Crecimiento real respecto al mismo mes del año pasado.
+*   **Z - REM 3m (%)**: Inflación proyectada por el BCRA para los próximos 3 meses.
+*   **AA - Objetivo 3m Bruto**: Sueldo bruto objetivo para dentro de 3 meses.
+*   **AB - Objetivo 3m Neto**: Sueldo neto objetivo para dentro de 3 meses.
+*   **AC - Δ 3m (%)**: Porcentaje de aumento sugerido hoy para cubrir los próximos 3 meses.
+*   **AD - REM 6m (%)**: Inflación proyectada para los próximos 6 meses.
+*   **AE - Objetivo 6m Bruto**: Sueldo bruto objetivo para dentro de 6 meses.
+*   **AF - Objetivo 6m Neto**: Sueldo neto objetivo para dentro de 6 meses.
+*   **AG - Δ 6m (%)**: Porcentaje de aumento sugerido hoy para cubrir los próximos 6 meses.
 
-## 5. PROYECCIONES REM (Expectativas de Mercado)
+## 5. DÓLAR
 
-*   **W - REM 3m (%)**: Inflación proyectada por el BCRA para los próximos 3 meses.
-*   **X - Objetivo 3m**: Sueldo bruto objetivo para dentro de 3 meses.
-*   **Y - Δ 3m (%)**: Porcentaje de aumento sugerido hoy para cubrir los próximos 3 meses.
-*   **Z - REM 6m (%)**: Inflación proyectada para los próximos 6 meses.
-*   **AA - Objetivo 6m**: Sueldo bruto objetivo para dentro de 6 meses.
-*   **AB - Δ 6m (%)**: Porcentaje de aumento sugerido hoy para cubrir los próximos 6 meses.
+*   **AH - CCL**: Cotización del dólar Contado con Liquidación al cierre de mes.
+*   **AI - Δ % CCL MoM**: Variación porcentual del dólar respecto al mes anterior.
+*   **AJ - Sueldo USD Bruto**: Tu sueldo bruto convertido a dólares a valor CCL.
+*   **AK - Sueldo USD Neto**: Tu sueldo neto convertido a dólares a valor CCL.
+*   **AL - Poder Adq. MoM (USD) Bruto**: Variación de tu sueldo bruto en dólares respecto al mes anterior.
+*   **AM - Poder Adq. MoM (USD) Neto**: Variación de tu sueldo neto en dólares respecto al mes anterior.
 
-## 6. DÓLARES (CCL)
+## 6. VS ÚLTIMO AUMENTO USD
 
-*   **AC - CCL**: Cotización del dólar Contado con Liquidación al cierre de mes.
-*   **AD - Δ % CCL MoM**: Variación porcentual del dólar respecto al mes anterior.
-*   **AE - Sueldo USD**: Tu "Total Neto" convertido a dólares a valor CCL.
-*   **AF - Poder Adq. MoM (USD)**: Variación de tu sueldo en dólares respecto al mes anterior.
-*   **AG - Poder Adq. Acum. (USD)**: Crecimiento acumulado de tus ingresos en dólares desde el primer registro.
-
-## 7. VS ÚLTIMO AUMENTO USD
-
-*   **AH - Atraso USD**: % de caída/subida en USD comparado con el valor del día del último aumento.
-*   **AI - Paridad USD**: Sueldo en pesos necesario hoy para recuperar los mismos dólares que el día del aumento.
-*   **AJ - Gap USD ($)**: Diferencia exacta en pesos (AI - B) para recuperar tu valor en dólares original.
+*   **AN - CCL Base**: Cotización del CCL en el momento del último aumento.
+*   **AO - Sueldo USD Bruto Base**: Sueldo bruto en USD al momento del último aumento.
+*   **AP - Sueldo USD Neto Base**: Sueldo neto en USD al momento del último aumento.
+*   **AQ - Atraso USD (Bruto)**: % de caída/subida en USD (Bruto) comparado con el valor del día del último aumento.
+*   **AR - Paridad USD (Bruto)**: Sueldo en pesos necesario hoy para recuperar los mismos dólares (Bruto) que el día del aumento.
+*   **AS - Atraso USD (Neto)**: % de caída/subida en USD (Neto) comparado con el valor del día del último aumento.
+*   **AT - Paridad USD (Neto)**: Sueldo en pesos necesario hoy para recuperar los mismos dólares (Neto) que el día del aumento.
 
 ---
 

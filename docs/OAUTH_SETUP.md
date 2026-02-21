@@ -1,164 +1,72 @@
-# OAuth Setup - Configuración para Usuarios
+# OAuth Setup - Guía para Tus Propias Credenciales
 
-Este instructivo es para usuarios que quieran usar `ingresos-tracker` con sus propias credenciales OAuth.
+Este instructivo es para usuarios que quieran usar `ingresos-tracker` con sus propias credenciales OAuth de Google Cloud.
 
-**Tiempo estimado:** 5 minutos
-**Es necesario hacerlo:** Una sola vez
+**Tiempo estimado:** 5 minutos.
+**Frecuencia:** Una sola vez.
 
-## ¿Por qué necesito esto?
+## ¿Por qué crear tus propias credenciales?
 
-Para que la aplicación pueda acceder a tus Google Sheets, necesitás darle permiso mediante OAuth 2.0. Como la app aún no está verificada por Google, cada usuario debe crear sus propias credenciales.
+Para que la aplicación pueda acceder a tus Google Sheets, necesitas un archivo `credentials.json`. Aunque el repo trae uno genérico para que pruebes rápido, crear el tuyo tiene ventajas:
+1. **Independencia total:** Si doy de baja las credenciales compartidas por seguridad, las tuyas siguen funcionando.
+2. **Sin límites de uso:** No compartes el límite de peticiones de Google (Rate Limits) con otros usuarios.
+3. **Mayor privacidad:** Tú eres el "Dueño" de la aplicación en Google Cloud.
 
 ## Paso a Paso
 
 ### 1. Crear Proyecto en Google Cloud
 
-1. Andá a: https://console.cloud.google.com
-2. Click en el selector de proyectos (arriba a la izquierda)
-3. Click **"NEW PROJECT"**
-4. Nombre: `ingresos-tracker` (o el que quieras)
-5. Click **"CREATE"**
-6. Esperá unos segundos y seleccioná el nuevo proyecto
+1. Ve a: [https://console.cloud.google.com](https://console.cloud.google.com)
+2. Haz clic en el selector de proyectos (arriba a la izquierda) > **"NEW PROJECT"**.
+3. Nombre: `ingresos-tracker-personal`.
+4. Haz clic en **"CREATE"** y selecciónalo.
 
 ### 2. Habilitar Google Sheets API
 
-1. En el menú lateral: **"APIs & Services"** > **"Library"**
-2. Buscá: `Google Sheets API`
-3. Click en **"Google Sheets API"**
-4. Click **"ENABLE"**
+1. En el buscador de arriba: Escribe `Google Sheets API`.
+2. Selecciónala y haz clic en **"ENABLE"**.
 
-### 3. Configurar OAuth Consent Screen
+### 3. Configurar Pantalla de Consentimiento (OAuth Consent Screen)
 
-1. Menú lateral: **"APIs & Services"** > **"OAuth consent screen"**
-2. Seleccioná **"External"** (o Internal si tenés Google Workspace)
-3. Click **"CREATE"**
+1. Menú lateral: **"APIs & Services"** > **"OAuth consent screen"**.
+2. Selecciona **"External"** > **"CREATE"**.
+3. **App name:** `ingresos-tracker`.
+4. **User support email:** Tu email.
+5. **Developer contact info:** Tu email.
+6. Haz clic en **"SAVE AND CONTINUE"**.
+7. **Scopes:** Haz clic en **"ADD OR REMOVE SCOPES"**. Busca `https://www.googleapis.com/auth/spreadsheets`, márcalo y haz clic en **"UPDATE"**.
+8. **Test users:** Haz clic en **"+ ADD USERS"** y agrega el mismo email con el que usarás Google Sheets. **(CRÍTICO: Si no haces esto, Google bloqueará el acceso)**.
+9. Finaliza haciendo clic en **"BACK TO DASHBOARD"**.
 
-**Completar el formulario:**
-- **App name:** `ingresos-tracker` (o el que quieras)
-- **User support email:** tu email
-- **Developer contact information:** tu email
-- Dejá el resto en blanco por ahora
-- Click **"SAVE AND CONTINUE"**
+### 4. Crear y Descargar Credenciales
 
-**Scopes:**
-- Click **"ADD OR REMOVE SCOPES"**
-- Buscá: `https://www.googleapis.com/auth/spreadsheets`
-- Marcá el checkbox
-- Click **"UPDATE"**
-- Click **"SAVE AND CONTINUE"**
-
-**Test users:**
-- Click **"+ ADD USERS"**
-- Agregá tu email (el que usarás para Google Sheets)
-- Click **"ADD"**
-- Click **"SAVE AND CONTINUE"**
-- Click **"BACK TO DASHBOARD"**
-
-### 4. Crear Credenciales OAuth
-
-1. Menú lateral: **"APIs & Services"** > **"Credentials"**
-2. Click **"+ CREATE CREDENTIALS"**
-3. Seleccioná **"OAuth client ID"**
-4. Application type: **"Desktop app"**
-5. Name: `ingresos-tracker-desktop` (o el que quieras)
-6. Click **"CREATE"**
-7. Aparecerá un popup con tus credenciales
-8. Click **"DOWNLOAD JSON"**
+1. Menú lateral: **"APIs & Services"** > **"Credentials"**.
+2. Haz clic en **"+ CREATE CREDENTIALS"** > **"OAuth client ID"**.
+3. **Application type:** Selecciona **"Desktop app"**.
+4. Haz clic en **"CREATE"**.
+5. Aparecerá un popup: Haz clic en **"DOWNLOAD JSON"**.
 
 ### 5. Configurar el Proyecto
 
-1. Renombrá el archivo descargado a `credentials.json`
-2. Movelo a la carpeta raíz del proyecto `ingresos/`
+1. Renombra el archivo descargado a `credentials.json`.
+2. Muévelo a la carpeta raíz del proyecto `ingresos/`, reemplazando el que ya existe.
 
-```bash
-mv ~/Downloads/client_secret_*.json /path/to/ingresos/credentials.json
-```
+## Primer Uso y Verificación
 
-### 6. Primer Uso - Autorización
+Al ejecutar `uv run python bootstrap.py` (o cualquier script), se abrirá el navegador para autorizar:
 
-La primera vez que ejecutes la app:
+1. Selecciona tu cuenta de Google.
+2. Verás el aviso: **"Google hasn't verified this app"**.
+3. Haz clic en **"Advanced"** > **"Go to ingresos-tracker (unsafe)"**.
+4. Haz clic en **"Allow"** para otorgar permisos.
 
-```bash
-uv run python inspect_ingresos.py
-```
+Este aviso es normal porque tú mismo eres el creador de la app y no has pasado por el proceso de auditoría oficial de Google (que solo tiene sentido para apps comerciales).
 
-1. Se abrirá tu navegador automáticamente
-2. Seleccioná tu cuenta de Google
-3. Verás un warning: **"Google hasn't verified this app"**
-   - Esto es normal porque creaste la app vos mismo
-   - Click **"Advanced"**
-   - Click **"Go to ingresos-tracker (unsafe)"**
-4. Click **"Allow"** para dar permisos
-5. La ventana se cerrará automáticamente
-6. Se creará un archivo `token.json` (no lo borres!)
+## Solución de Problemas Comunes
 
-**El archivo `token.json`:**
-- Contiene tu token de acceso
-- Se renueva automáticamente
-- No lo subas a GitHub (ya está en `.gitignore`)
-- Si lo borrás, tendrás que autorizar de nuevo
+- **"Access blocked: has not completed verification":** Revisa el Paso 3, sub-paso 8. Olvidaste agregarte como "Test user".
+- **"The user did not grant required scopes":** Al autorizar, asegúrate de marcar el permiso para ver/editar hojas de cálculo.
 
-## Troubleshooting
+## Revocación de Acceso
 
-### Error: "Access blocked: ingresos-tracker has not completed the Google verification process"
-
-**Solución:** Asegurate de haber agregado tu email como "test user" en el paso 3.
-
-### Error: "The user did not grant the required scopes"
-
-**Solución:** En el paso de autorización (paso 6), asegurate de clickear "Allow" y no "Deny".
-
-### Error: "invalid_grant" o "Token has been expired or revoked"
-
-**Solución:** Borrá `token.json` y volvé a autorizar:
-
-```bash
-rm token.json
-uv run python inspect_ingresos.py
-```
-
-### No se abre el navegador automáticamente
-
-1. Fijate si hay una URL en la terminal
-2. Copiá y pegá esa URL en tu navegador manualmente
-3. Completá el flujo de autorización
-
-## Seguridad
-
-### ¿Es seguro?
-
-Sí, porque:
-- **Vos creás las credenciales** en tu propia cuenta de Google Cloud
-- **Vos controlás qué permisos das** (solo acceso a Sheets)
-- **Los tokens se guardan localmente** en tu máquina (no se comparten)
-- **Podés revocar el acceso** en cualquier momento desde: https://myaccount.google.com/permissions
-
-### Revocar Acceso
-
-Si querés quitar los permisos:
-1. Andá a: https://myaccount.google.com/permissions
-2. Buscá "ingresos-tracker"
-3. Click **"Remove access"**
-
-## Archivos Importantes
-
-- `credentials.json` - **NO subir a GitHub** - Credenciales de tu app OAuth
-- `token.json` - **NO subir a GitHub** - Token de acceso generado
-- Ambos ya están en `.gitignore`
-
-## ¿Necesito hacer esto cada vez?
-
-**No.** Solo necesitás:
-- Crear el proyecto y credenciales: **1 vez**
-- Autorizar (paso 6): **1 vez** (o si borrás `token.json`)
-
-Después de eso, la app funciona automáticamente.
-
----
-
-## Próximos Pasos
-
-Una vez completado el setup:
-- Ejecutá `uv run python inspect_ingresos.py` para ver las fórmulas
-- Ejecutá otros scripts del proyecto normalmente
-- Disfrutá tracking tus ingresos ajustados por inflación
+Si alguna vez quieres quitar los permisos, ve a [Google Account - Third-party apps](https://myaccount.google.com/permissions) y elimina "ingresos-tracker".

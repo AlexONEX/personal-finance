@@ -33,17 +33,16 @@ REM_SHEET = "REM"
 PANEL_SHEET = "Panel"
 
 C = {
-    "SUELDO": {"red": 0.8, "green": 0.9, "blue": 1.0},
-    "AGUINALDO": {"red": 0.9, "green": 1.0, "blue": 0.9},
-    "BONOS": {"red": 1.0, "green": 0.9, "blue": 0.8},
+    "SUELDO": {"red": 0.8, "green": 0.898, "blue": 1.0},
+    "AGUINALDO": {"red": 0.898, "green": 1.0, "blue": 0.898},
+    "BONOS": {"red": 1.0, "green": 0.898, "blue": 0.8},
     "BENEFICIOS": {"red": 1.0, "green": 1.0, "blue": 0.8},
-    "TOTAL": {"red": 0.9, "green": 0.8, "blue": 1.0},
+    "TOTAL": {"red": 0.898, "green": 0.8, "blue": 1.0},
     "INFLACIÓN (CER)": {"red": 1.0, "green": 0.8, "blue": 0.8},
-    "VS ÚLTIMO AUMENTO": {"red": 0.95, "green": 0.95, "blue": 0.95},
-    "ANÁLISIS TOTAL": {"red": 0.9, "green": 0.9, "blue": 0.9},
+    "VS ÚLTIMO AUMENTO ARS": {"red": 0.949, "green": 0.949, "blue": 0.949},
     "PROYECCIONES REM": {"red": 0.8, "green": 1.0, "blue": 1.0},
-    "DÓLARES (CCL)": {"red": 0.8, "green": 0.9, "blue": 0.9},
-    "VS ÚLTIMO AUMENTO USD": {"red": 0.85, "green": 0.85, "blue": 0.85},
+    "DÓLAR": {"red": 0.8, "green": 0.898, "blue": 0.898},
+    "VS ÚLTIMO AUMENTO USD": {"red": 0.988, "green": 0.898, "blue": 0.804},
     "_bg": {"red": 0.2, "green": 0.3, "blue": 0.4},
     "_fg": {"red": 1.0, "green": 1.0, "blue": 1.0},
 }
@@ -56,7 +55,7 @@ def col_idx(letter: str) -> int:
     return res - 1
 
 
-def get_or_create_worksheet(ss: gspread.Spreadsheet, title: str, rows=1000, cols=40):
+def get_or_create_worksheet(ss: gspread.Spreadsheet, title: str, rows=1000, cols=60):
     try:
         return ss.worksheet(title)
     except gspread.exceptions.WorksheetNotFound:
@@ -191,17 +190,17 @@ def setup_rem(ss: gspread.Spreadsheet):
 
 def setup_ingresos(ss: gspread.Spreadsheet):
     print(f"Configurando {INCOME_SHEET}...")
-    ws = get_or_create_worksheet(ss, INCOME_SHEET, rows=MAX_ROWS, cols=40)
+    ws = get_or_create_worksheet(ss, INCOME_SHEET, rows=MAX_ROWS, cols=60)
 
-    group_row = [""] * 40
+    group_row = [""] * 60
     for start, end, label in INCOME_GROUPS:
         group_row[col_idx(start)] = label
-    ws.update(range_name="A1:AN1", values=[group_row])
+    ws.update(range_name="A1:BH1", values=[group_row])
 
-    header_row = [""] * 40
+    header_row = [""] * 60
     for col_let, title, *rest in INCOME_COLUMNS:
         header_row[col_idx(col_let)] = title
-    ws.update(range_name="A2:AN2", values=[header_row])
+    ws.update(range_name="A2:BH2", values=[header_row])
 
     formula_updates = []
     for col_let, title, *rest in INCOME_COLUMNS:
@@ -226,7 +225,7 @@ def setup_ingresos(ss: gspread.Spreadsheet):
                     "startRowIndex": 0,
                     "endRowIndex": 2,
                     "startColumnIndex": 0,
-                    "endColumnIndex": 40,
+                    "endColumnIndex": 60,
                 }
             }
         },
@@ -257,15 +256,17 @@ def setup_ingresos(ss: gspread.Spreadsheet):
                     }
                 }
             )
+
         if label:
             color = C.get(label, C["_bg"])
+            # Header format (Rows 1-2)
             reqs.append(
                 {
                     "repeatCell": {
                         "range": {
                             "sheetId": ws.id,
                             "startRowIndex": 0,
-                            "endRowIndex": 1,
+                            "endRowIndex": 2,
                             "startColumnIndex": col_idx(start),
                             "endColumnIndex": col_idx(end) + 1,
                         },
@@ -274,9 +275,33 @@ def setup_ingresos(ss: gspread.Spreadsheet):
                                 "backgroundColor": color,
                                 "textFormat": {"bold": True},
                                 "horizontalAlignment": "CENTER",
+                                "verticalAlignment": "MIDDLE",
                             }
                         },
-                        "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment)",
+                        "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)",
+                    }
+                }
+            )
+
+            # Data background (Rows 3-MAX_ROWS)
+            # Create a lighter version for data background
+            light_color = {
+                "red": min(1.0, color["red"] + (1 - color["red"]) * 0.85),
+                "green": min(1.0, color["green"] + (1 - color["green"]) * 0.85),
+                "blue": min(1.0, color["blue"] + (1 - color["blue"]) * 0.85),
+            }
+            reqs.append(
+                {
+                    "repeatCell": {
+                        "range": {
+                            "sheetId": ws.id,
+                            "startRowIndex": 2,
+                            "endRowIndex": MAX_ROWS,
+                            "startColumnIndex": col_idx(start),
+                            "endColumnIndex": col_idx(end) + 1,
+                        },
+                        "cell": {"userEnteredFormat": {"backgroundColor": light_color}},
+                        "fields": "userEnteredFormat.backgroundColor",
                     }
                 }
             )
