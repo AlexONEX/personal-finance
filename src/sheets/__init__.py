@@ -1,6 +1,17 @@
-"""Sheet structure definitions and setup logic."""
+"""Sheet structure definitions."""
 
-from .setup import setup_sheets
-from .structure import INCOME_COLUMNS, INCOME_GROUPS
+from .structure import (
+    INCOME_COLUMNS,
+    INCOME_GROUPS,
+    COLUMN_FORMATS,
+    IMPUESTOS_ROWS,
+    HISTORIC_VARIABLES,
+)
 
-__all__ = ["setup_sheets", "INCOME_COLUMNS", "INCOME_GROUPS"]
+__all__ = [
+    "INCOME_COLUMNS",
+    "INCOME_GROUPS",
+    "COLUMN_FORMATS",
+    "IMPUESTOS_ROWS",
+    "HISTORIC_VARIABLES",
+]

@@ -1,192 +1,63 @@
-# Ingresos Tracker - Argentina
+# Ingresos Tracker
 
-Sistema automatizado para tracking de ingresos en Argentina con ajuste por inflacion (CER) y dolarizacion (CCL).
+Sistema automatizado para el seguimiento de ingresos personales en Argentina, con ajuste por inflación (CER), proyecciones de mercado (REM) y comparativa en dólares (CCL).
 
----
+## 📊 Diccionario de Columnas (Hoja 'Ingresos')
 
-## Setup Rapido (3 minutos)
+### 1. DATOS BASE & INGRESOS
+*   **A - Fecha**: Mes del registro (dd/mm/aaaa). Se recomienda usar el día 1 de cada mes.
+*   **B - Bruto**: Sueldo bruto mensual (input manual).
+*   **C - Jubilación**: Descuento automático (11% del bruto).
+*   **D - PAMI**: Descuento automático (3% del bruto).
+*   **E - Obra Social**: Descuento automático (3% del bruto).
+*   **F - Neto**: El sueldo "en mano" (Bruto - Descuentos).
+*   **G - SAC Bruto**: Monto del aguinaldo bruto (input manual, 2 veces al año).
+*   **H - SAC Neto**: Aguinaldo con descuentos aplicados automáticamente.
+*   **I - Bono Neto**: Bonos extraordinarios recibidos en el mes (input manual).
+*   **J - Comida**: Beneficio de comida mensual (input manual).
+*   **K - Otros Beneficios**: Valores monetarios de otros beneficios (input manual).
+*   **L - Total Neto**: La suma de todo lo que efectivamente entró a tu cuenta ese mes.
 
-```bash
-# 1. Instalar uv
-curl -LsSf https://astral.sh/uv/install.sh | sh
+### 2. INFLACIÓN (CER)
+*   **M - Δ % CER MoM**: Inflación mensual oficial según la variación del Coeficiente de Estabilización de Referencia.
+*   **N - Δ Sueldo MoM**: Variación porcentual de tu sueldo neto respecto al mes anterior.
+*   **O - Poder Adq. MoM**: Diferencia real entre tu aumento y la inflación del mes. (Positivo = ganaste, Negativo = perdiste).
+*   **P - Poder Adq. Acum.**: Variación del poder de compra real desde el primer registro (Neto vs CER acumulado).
 
-# 2. Clonar repo
-git clone <repo-url>
-cd ingresos
+### 3. VS ÚLTIMO AUMENTO
+*   **Q - Bruto Base**: El sueldo bruto que tenías en el momento del último cambio de sueldo.
+*   **R - CER Base**: Valor del CER en el momento del último aumento.
+*   **S - Atraso Real ARS**: % que debería subir tu sueldo hoy para igualar la inflación desde tu último aumento.
+*   **T - Paridad CER**: El sueldo bruto ideal que deberías cobrar hoy para empatar la inflación acumulada.
 
-# 3. Bootstrap (abre browser para autorizar)
-uv run bootstrap.py
-```
+### 4. ANÁLISIS TOTAL
+*   **U - Ingreso a Valor Hoy**: Tu sueldo pasado multiplicado por la inflación acumulada hasta hoy.
+*   **V - Δ Real vs Año Ant.**: Comparativa interanual móvil. Crecimiento real respecto al mismo mes del año pasado.
 
-**Que hace:** Crea tu spreadsheet automaticamente con datos historicos desde 2022.
+### 5. PROYECCIONES REM (Expectativas de Mercado)
+*   **W - REM 3m (%)**: Inflación proyectada por el BCRA para los próximos 3 meses.
+*   **X - Objetivo 3m**: Sueldo bruto objetivo para dentro de 3 meses.
+*   **Y - Δ 3m (%)**: Porcentaje de aumento sugerido hoy para cubrir los próximos 3 meses.
+*   **Z - REM 6m (%)**: Inflación proyectada para los próximos 6 meses.
+*   **AA - Objetivo 6m**: Sueldo bruto objetivo para dentro de 6 meses.
+*   **AB - Δ 6m (%)**: Porcentaje de aumento sugerido hoy para cubrir los próximos 6 meses.
 
-**Importante:** Se va a abrir el browser para que autorices "Ingresos Tracker" con tu cuenta Google. El `credentials.json` incluido en el repo es seguro (ver seccion Seguridad abajo).
+### 6. DÓLARES (CCL)
+*   **AC - CCL**: Cotización del dólar Contado con Liquidación al cierre de mes.
+*   **AD - Δ % CCL MoM**: Variación porcentual del dólar respecto al mes anterior.
+*   **AE - Sueldo USD**: Tu "Total Neto" convertido a dólares a valor CCL.
+*   **AF - Poder Adq. MoM (USD)**: Variación de tu sueldo en dólares respecto al mes anterior.
+*   **AG - Poder Adq. Acum. (USD)**: Crecimiento acumulado de tus ingresos en dólares desde el primer registro.
 
----
-
-## Que trackea
-
-### Datos automaticos (se actualizan solos)
-- **CER** - BCRA API (inflacion oficial)
-- **CCL** - Ambito Financiero (dolar contado con liqui)
-
-### Tu input manual (en la tab "test")
-- Sueldo bruto mensual
-- Aguinaldo (SAC) - Jun/Dic
-- Bonos/beneficios empresa
-
-### Analisis que calcula automaticamente
-- Impuestos (jubilacion 11%, PAMI 3%, obra social 3%)
-- Neto en ARS y USD
-- **Le ganaste a la inflacion?** (sueldo real ajustado por CER)
-- Poder adquisitivo mes a mes
-- Indices y variaciones MoM
-
----
-
-## Estructura del Spreadsheet
-
-**4 sheets creadas automaticamente:**
-
-1. **impuestos** - Tasas configurables (edita aca para cambiarlas)
-2. **historic_data** - Datos diarios CER + CCL (auto-poblado)
-3. **market_data** - Agregados mensuales (auto-calculado)
-4. **test** - **TU INPUT ACA** - todo lo demas se calcula solo
-
-**En la tab "test" ingresas:**
-- Col A: Fecha (01/06/2024)
-- Col B: Sueldo Bruto
-- Col G: SAC Bruto (solo Jun/Dic)
-- Col I-K: Bonos, comida, viajes (opcional)
-
-**Formulas calculan automaticamente:**
-- Impuestos, neto, conversion USD, analisis vs inflacion, etc.
+### 7. VS ÚLTIMO AUMENTO USD
+*   **AH - Atraso USD**: % de caída/subida en USD comparado con el valor del día del último aumento.
+*   **AI - Paridad USD**: Sueldo en pesos necesario hoy para recuperar los mismos dólares que el día del aumento.
+*   **AJ - Gap USD ($)**: Diferencia exacta en pesos (AI - B) para recuperar tu valor en dólares original.
 
 ---
 
-## Actualizar Datos
+## 🚀 Uso Rápido
 
-### Manual
-```bash
-./update_daily.sh
-```
-
-### Automatico (recomendado)
-```bash
-./automation/install.sh  # Configura update diario a las 9 AM
-```
-
----
-
-## Comandos Utiles
-
-```bash
-# Actualizar datos desde fecha especifica
-uv run fetch_historic.py --since 2022-01-01
-
-# Recomputar agregados mensuales
-uv run compute_market.py
-
-# Recrear estructura del sheet (ADVERTENCIA: borra data)
-uv run setup_sheet.py
-
-# Testear toda la funcionalidad
-uv run test_flow.py
-```
-
----
-
-## Seguridad y Privacidad
-
-### Por que el repo incluye `credentials.json`?
-
-Es un **OAuth Desktop App client**. Este archivo:
-- **NO da acceso a tus datos** - solo identifica la app "Ingresos Tracker"
-- **Requiere TU autorizacion** - se abre browser y vos decidis
-- **Tu token es privado** - el `token.json` que se genera esta en .gitignore
-- **Es seguro commitearlo** - disenado para apps publicas
-
-De la [doc oficial de Google](https://developers.google.com/identity/protocols/oauth2/native-app):
-> "The client secret is not treated as a secret for native apps."
-
-### Que permisos tiene?
-
-**Solo Google Sheets.** No puede leer emails, Drive, ni nada mas.
-
-### Como revoco acceso?
-
-https://myaccount.google.com/permissions - Remover "Ingresos Tracker"
-
-### Que se commitea?
-
-| Archivo | Repo | Privado | Descripcion |
-|---------|------|---------|-------------|
-| `credentials.json` | Si | No | OAuth client (publico) |
-| `token.json` | No | Si | Tu access token |
-| `.env` | No | Si | Tu SPREADSHEET_ID |
-| `service_account.json` | No | Si | Si lo tenes |
-
----
-
-## Troubleshooting
-
-**Error: "Client secrets must be for a web or installed app"**
-- El `credentials.json` esta corrupto. Re-clona el repo.
-
-**Error: "SPREADSHEET_ID not set"**
-- Corriste scripts sin hacer `bootstrap.py` primero.
-
-**Los datos no se actualizan**
-- Corri `./update_daily.sh` manualmente y verifica errores.
-
-**Quiero cambiar tasas de impuestos**
-- Edita directamente la sheet **impuestos**, todo se recalcula solo.
-
----
-
-## Arquitectura
-
-```
-src/
-├── connectors/      # APIs externas (BCRA, Ambito, Google Sheets)
-├── core/            # Logica de negocio (agregaciones)
-└── sheets/          # Definiciones y setup de sheets
-
-Entry points (raiz):
-- bootstrap.py       # Setup one-command
-- fetch_historic.py  # Actualizar CER + CCL
-- compute_market.py  # Agregacion mensual
-- update_daily.sh    # Wrapper para updates
-- test_flow.py       # Test suite
-```
-
-**Flujo de datos:**
-```
-BCRA API + Ambito.com
-       |
-fetch_historic.py -> historic_data (daily)
-       |
-compute_market.py -> market_data (monthly end-of-month)
-       |
-test sheet (VLOOKUP) -> tus inputs + analisis automatico
-```
-
----
-
-## Contributing
-
-PRs bienvenidos para:
-- Mas fuentes de datos (blue, MEP, oficial)
-- Mas analisis
-- Soporte multi-pais
-- Bug fixes
-
----
-
-## License
-
-MIT
-
----
-
-**Made with heart para sobrevivir a la inflacion argentina**
+1.  **Actualizar Datos**: Ejecutá `./update_daily.sh` para bajar CER, CCL y REM (actualiza historial desde 2022).
+2.  **Cargar Sueldo**: Abrí la hoja `Ingresos` y cargá solo las columnas blancas (**Fecha**, **Bruto**, **SAC**, **Bonos**, **Beneficios**).
+3.  **Configurar Tasas**: Si cambian los aportes de ley, editalos en la hoja `impuestos`.

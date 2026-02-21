@@ -39,7 +39,7 @@ SPREADSHEET_ID = os.environ.get("SPREADSHEET_ID")
 SERVICE_ACCOUNT = "service_account.json"
 
 HISTORIC_SHEET = "historic_data"
-FIRST_DATA_ROW = 3  # row 1 = metadata, row 2 = col headers
+FIRST_DATA_ROW = 4  # row 1 = metadata, row 2 = col headers, row 3 = spacer
 BACKFILL_FROM = date(2022, 1, 1)
 
 BCRA_URL = "https://api.bcra.gob.ar/estadisticas/v4.0/Monetarias/30"

@@ -165,14 +165,14 @@ def main() -> None:
             f"Fetch CER + CCL since {args.start_date}",
         )
 
-        print("\n[5/5] Computing monthly aggregates...")
+        print("\n[5/5] Fetching historical REM projections...")
         run_command(
-            ["uv", "run", "compute_market.py"],
-            "Compute monthly market data",
+            ["uv", "run", "fetch_rem.py", "--since", args.start_date.strftime("%Y-%m")],
+            "Fetch historical REM data",
         )
     else:
         print("\n[4/5] Skipping historical data fetch (--skip-fetch)")
-        print("[5/5] Skipping monthly aggregates (--skip-fetch)")
+        print("[5/5] Skipping REM fetch (--skip-fetch)")
 
     # Success
     print("\n" + "=" * 60)

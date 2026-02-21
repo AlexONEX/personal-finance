@@ -31,13 +31,13 @@ else
     exit 1
 fi
 
-# Step 2: Recompute monthly aggregates
+# Step 2: Fetch latest REM projections
 echo "" | tee -a "$LOG_FILE"
-echo "[2/2] Computing monthly aggregates..." | tee -a "$LOG_FILE"
-if uv run compute_market.py 2>&1 | tee -a "$LOG_FILE"; then
-    echo "✓ Compute complete" | tee -a "$LOG_FILE"
+echo "[2/2] Fetching latest REM projections..." | tee -a "$LOG_FILE"
+if uv run fetch_rem.py 2>&1 | tee -a "$LOG_FILE"; then
+    echo "✓ REM fetch complete" | tee -a "$LOG_FILE"
 else
-    echo "✗ Compute failed" | tee -a "$LOG_FILE"
+    echo "✗ REM fetch failed" | tee -a "$LOG_FILE"
     exit 1
 fi
 
