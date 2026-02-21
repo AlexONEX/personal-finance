@@ -45,7 +45,12 @@ La primera vez que ejecutes cualquier script, se abrirá un navegador para autor
 4. El token se guardará automáticamente en `token.json`
 
 **¿Por qué aparece este warning?**
-La app no está "verificada" por Google porque el proceso es extremadamente largo y complejo, por eso usamos credenciales OAuth compartidas (`credentials.json`) incluidas en el repositorio. Esto permite que funcione sin que cada usuario tenga que crear su propio proyecto en Google Cloud. Es seguro porque solo pedimos permisos de lectura/escritura de Sheets y el código es open source.
+La app no está "verificada" por Google porque [el proceso de verificación](https://support.google.com/cloud/answer/7454865?hl=en) es extremadamente largo y complejo. Además, **no necesitamos verificación** según la propia documentación de Google, ya que este proyecto es:
+- Código open source experimental/personal (no un producto comercial)
+- Ejecutado localmente por cada usuario (no un servicio centralizado)
+- No lanzado al público como servicio
+
+Por eso usamos credenciales OAuth compartidas (`credentials.json`) incluidas en el repositorio. Esto permite que funcione sin que cada usuario tenga que crear su propio proyecto en Google Cloud. Es seguro porque solo pedimos permisos de lectura/escritura de Sheets y el código es open source.
 
 Si preferís usar tus propias credenciales OAuth, seguí la guía en [docs/OAUTH_SETUP.md](docs/OAUTH_SETUP.md).
 
