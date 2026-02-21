@@ -28,46 +28,92 @@ INCOME_COLUMNS = [
     ("E", "Obra Social", '=IF(ISBLANK(B{r}),"",ROUND(B{r}*impuestos!$B$4,0))'),
     ("F", "Neto", '=IF(ISBLANK(B{r}),"",B{r}-C{r}-D{r}-E{r})'),
     ("G", "SAC Bruto", None),
-    ("H", "SAC Neto", '=IF(ISBLANK(G{r}),"",G{r}-ROUND(G{r}*impuestos!$B$2,0)-ROUND(G{r}*impuestos!$B$3,0)-ROUND(G{r}*impuestos!$B$4,0))'),
+    (
+        "H",
+        "SAC Neto",
+        '=IF(ISBLANK(G{r}),"",G{r}-ROUND(G{r}*impuestos!$B$2,0)-ROUND(G{r}*impuestos!$B$3,0)-ROUND(G{r}*impuestos!$B$4,0))',
+    ),
     ("I", "Bono Neto", None),
     ("J", "Comida", None),
     ("K", "Otros Beneficios", None),
     ("L", "Total Neto", '=IFERROR(IF(SUM(F{r}:K{r})=0, "", SUM(F{r}:K{r})), "")'),
-
     # GRUPO 2: INFLACIÓN / CER (M-P)
-    ("M", "Δ% CER MoM", '=IFERROR((VLOOKUP(A{r}, historic_data!$A$4:$B, 2, TRUE) / VLOOKUP(A{r-1}, historic_data!$A$4:$B, 2, TRUE)) - 1, "-")'),
+    (
+        "M",
+        "Δ% CER MoM",
+        '=IFERROR((VLOOKUP(A{r}, historic_data!$A$4:$B, 2, TRUE) / VLOOKUP(A{r-1}, historic_data!$A$4:$B, 2, TRUE)) - 1, "-")',
+    ),
     ("N", "Δ Sueldo MoM", '=IFERROR(F{r}/F{r-1}-1,"-")'),
     ("O", "Poder Adq. MoM", '=IFERROR((1+N{r})/(1+M{r})-1,"-")'),
-    ("P", "Poder Adq. Acum.", '=IFERROR((F{r}/$F$3) / (VLOOKUP(A{r}, historic_data!$A$4:$B, 2, TRUE) / VLOOKUP($A$3, historic_data!$A$4:$B, 2, TRUE)) - 1, "")'),
-
+    (
+        "P",
+        "Poder Adq. Acum.",
+        '=IFERROR((F{r}/$F$3) / (VLOOKUP(A{r}, historic_data!$A$4:$B, 2, TRUE) / VLOOKUP($A$3, historic_data!$A$4:$B, 2, TRUE)) - 1, "")',
+    ),
     # GRUPO 3: VS ÚLTIMO AUMENTO (Q-T)
-    ("Q", "Bruto Base", '=IF(OR(ROW(B{r})=3, B{r}<>B{r-1}), B{r}, Q{r-1})'),
-    ("R", "CER Base", '=IF(OR(ROW(B{r})=3, B{r}<>B{r-1}), VLOOKUP(A{r}, historic_data!$A$4:$B, 2, TRUE), R{r-1})'),
-    ("S", "Atraso Real ARS", '=IFERROR((B{r}/Q{r}) / (VLOOKUP(A{r}, historic_data!$A$4:$B, 2, TRUE)/R{r}) - 1, "")'),
-    ("T", "Paridad CER", '=IFERROR(Q{r} * (VLOOKUP(A{r}, historic_data!$A$4:$B, 2, TRUE)/R{r}), "")'),
-
+    ("Q", "Bruto Base", "=IF(OR(ROW(B{r})=3, B{r}<>B{r-1}), B{r}, Q{r-1})"),
+    (
+        "R",
+        "CER Base",
+        "=IF(OR(ROW(B{r})=3, B{r}<>B{r-1}), VLOOKUP(A{r}, historic_data!$A$4:$B, 2, TRUE), R{r-1})",
+    ),
+    (
+        "S",
+        "Atraso Real ARS",
+        '=IFERROR((B{r}/Q{r}) / (VLOOKUP(A{r}, historic_data!$A$4:$B, 2, TRUE)/R{r}) - 1, "")',
+    ),
+    (
+        "T",
+        "Paridad CER",
+        '=IFERROR(Q{r} * (VLOOKUP(A{r}, historic_data!$A$4:$B, 2, TRUE)/R{r}), "")',
+    ),
     # GRUPO 4: ANÁLISIS TOTAL (U-V)
-    ("U", "Ingreso a Valor Hoy", '=IFERROR(L{r} * (INDEX(historic_data!$B$4:$B, MATCH(9.9E+307, historic_data!$B$4:$B)) / VLOOKUP(A{r}, historic_data!$A$4:$B, 2, TRUE)), "")'),
-    ("V", "Δ Real vs Año Ant.", '=IFERROR((F{r} / VLOOKUP(EDATE(A{r},-12), $A:$F, 6, FALSE)) / (VLOOKUP(A{r}, historic_data!$A$4:$B, 2, TRUE) / VLOOKUP(EDATE(A{r},-12), historic_data!$A$4:$B, 2, TRUE)) - 1, "")'),
-
+    (
+        "U",
+        "Ingreso a Valor Hoy",
+        '=IFERROR(L{r} * (INDEX(historic_data!$B$4:$B, MATCH(9.9E+307, historic_data!$B$4:$B)) / VLOOKUP(A{r}, historic_data!$A$4:$B, 2, TRUE)), "")',
+    ),
+    (
+        "V",
+        "Δ Real vs Año Ant.",
+        '=IFERROR((F{r} / VLOOKUP(EDATE(A{r},-12), $A:$F, 6, FALSE)) / (VLOOKUP(A{r}, historic_data!$A$4:$B, 2, TRUE) / VLOOKUP(EDATE(A{r},-12), historic_data!$A$4:$B, 2, TRUE)) - 1, "")',
+    ),
     # GRUPO 5: PROYECCIONES REM (W-AB)
-    ("W", "REM 3m (%)", '=(1+IFERROR(VLOOKUP($A{r}, REM!$A$4:$I, 3, FALSE), 0))*(1+IFERROR(VLOOKUP($A{r}, REM!$A$4:$I, 4, FALSE), 0))*(1+IFERROR(VLOOKUP($A{r}, REM!$A$4:$I, 5, FALSE), 0))-1'),
+    (
+        "W",
+        "REM 3m (%)",
+        "=(1+IFERROR(VLOOKUP($A{r}, REM!$A$4:$I, 3, FALSE), 0))*(1+IFERROR(VLOOKUP($A{r}, REM!$A$4:$I, 4, FALSE), 0))*(1+IFERROR(VLOOKUP($A{r}, REM!$A$4:$I, 5, FALSE), 0))-1",
+    ),
     ("X", "Objetivo 3m", '=IFERROR(B{r} * (1+W{r}), "")'),
-    ("Y", "Δ 3m (%)", '=W{r}'),
-    ("Z", "REM 6m (%)", '=(1+W{r})*(1+IFERROR(VLOOKUP($A{r}, REM!$A$4:$I, 6, FALSE), 0))*(1+IFERROR(VLOOKUP($A{r}, REM!$A$4:$I, 7, FALSE), 0))*(1+IFERROR(VLOOKUP($A{r}, REM!$A$4:$I, 8, FALSE), 0))-1'),
+    ("Y", "Δ 3m (%)", "=W{r}"),
+    (
+        "Z",
+        "REM 6m (%)",
+        "=(1+W{r})*(1+IFERROR(VLOOKUP($A{r}, REM!$A$4:$I, 6, FALSE), 0))*(1+IFERROR(VLOOKUP($A{r}, REM!$A$4:$I, 7, FALSE), 0))*(1+IFERROR(VLOOKUP($A{r}, REM!$A$4:$I, 8, FALSE), 0))-1",
+    ),
     ("AA", "Objetivo 6m", '=IFERROR(B{r} * (1+Z{r}), "")'),
-    ("AB", "Δ 6m (%)", '=Z{r}'),
-
+    ("AB", "Δ 6m (%)", "=Z{r}"),
     # GRUPO 6: DÓLARES / USD (AC-AG)
-    ("AC", "CCL", '=IFERROR(INDEX(FILTER(historic_data!$C$4:$C, historic_data!$C$4:$C <> ""), MATCH(A{r}, FILTER(historic_data!$A$4:$A, historic_data!$C$4:$C <> ""), 1)), "")'),
+    (
+        "AC",
+        "CCL",
+        '=IFERROR(INDEX(FILTER(historic_data!$C$4:$C, historic_data!$C$4:$C <> ""), MATCH(A{r}, FILTER(historic_data!$A$4:$A, historic_data!$C$4:$C <> ""), 1)), "")',
+    ),
     ("AD", "Δ % CCL MoM", '=IFERROR((AC{r}-AC{r-1})/AC{r-1}, "-")'),
     ("AE", "Sueldo USD", '=IFERROR(L{r}/AC{r},"")'),
     ("AF", "Poder Adq. MoM (USD)", '=IFERROR((AE{r}/AE{r-1})-1, "-")'),
     ("AG", "Poder Adq. Acum. (USD)", '=IFERROR((AE{r}/$AE$3)-1, "")'),
-
     # GRUPO 7: VS ÚLTIMO AUMENTO USD (AH-AJ)
-    ("AH", "Atraso USD", '=IFERROR((AE{r} / INDEX($AE:$AE, MAX(IF($B$3:B{r}<>$B$2:B{r-1}, ROW($B$3:B{r}))))) - 1, "")'),
-    ("AI", "Paridad USD", '=IFERROR(Q{r} * (AC{r} / INDEX($AC:$AC, MAX(IF($B$3:B{r}<>$B$2:B{r-1}, ROW($B$3:B{r}))))), "")'),
+    (
+        "AH",
+        "Atraso USD",
+        '=IFERROR((AE{r} / INDEX($AE:$AE, MAX(IF($B$3:B{r}<>$B$2:B{r-1}, ROW($B$3:B{r}))))) - 1, "")',
+    ),
+    (
+        "AI",
+        "Paridad USD",
+        '=IFERROR(Q{r} * (AC{r} / INDEX($AC:$AC, MAX(IF($B$3:B{r}<>$B$2:B{r-1}, ROW($B$3:B{r}))))), "")',
+    ),
     ("AJ", "Gap USD ($)", '=IFERROR(AI{r} - B{r}, "")'),
 ]
 
