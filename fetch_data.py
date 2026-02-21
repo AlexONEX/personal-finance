@@ -8,14 +8,19 @@ import argparse
 import io
 import logging
 import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import date, datetime
 
 import openpyxl
 import requests
+import urllib3
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 
 from src.connectors.sheets import get_sheets_client
+
+# Suppress only InsecureRequestWarning for BCRA (they have cert issues)
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -59,19 +64,21 @@ MONTHS_MAP = {
 def fetch_cer(since: date, until: date) -> dict[date, float]:
     results = {}
     offset, limit = 0, 3000
-    logger.info(f"CER: fetching {since} -> {until} from BCRA...")
 
     while True:
         try:
+            # WARNING: BCRA API has certificate issues (known Argentina Central Bank infrastructure issue)
+            # Using verify=False ONLY for BCRA endpoints as a necessary exception
             resp = requests.get(
                 BCRA_API_URL,
                 params={
-                    "desde": since.isoformat(),
+                    "desde": since.isoformat(),  # YYYY-MM-DD format
                     "hasta": until.isoformat(),
                     "limit": limit,
                     "offset": offset,
                 },
                 timeout=30,
+                verify=False,
             )
             resp.raise_for_status()
             body = resp.json()
@@ -106,13 +113,11 @@ def fetch_cer(since: date, until: date) -> dict[date, float]:
             logger.error(f"CER: invalid response format: {e}")
             break
 
-    logger.info(f"CER: fetched {len(results)} records")
     return results
 
 
 def fetch_ccl_ambito(since: date, until: date) -> dict[date, float]:
     url = AMBITO_CCL_URL.format(desde=since.isoformat(), hasta=until.isoformat())
-    logger.info(f"CCL: fetching {since} -> {until} from Ambito...")
     out = {}
 
     try:
@@ -141,7 +146,6 @@ def fetch_ccl_ambito(since: date, until: date) -> dict[date, float]:
     except (ValueError, KeyError) as e:
         logger.error(f"CCL Ambito: invalid response format: {e}")
 
-    logger.info(f"CCL: fetched {len(out)} records from Ambito")
     return out
 
 
@@ -176,10 +180,9 @@ def fetch_ccl_today() -> tuple[date, float] | None:
 
 
 def get_rem_publication_links(since_date: tuple[int, int]) -> list[dict]:
-    logger.info(f"REM: searching for reports at {BCRA_TODOS_REM_URL}...")
-
     try:
-        r = requests.get(BCRA_TODOS_REM_URL, timeout=30)
+        # BCRA has certificate issues
+        r = requests.get(BCRA_TODOS_REM_URL, timeout=30, verify=False)
         r.raise_for_status()
     except requests.exceptions.RequestException as e:
         logger.error(f"REM: failed to fetch publication list: {e}")
@@ -219,13 +222,13 @@ def get_rem_publication_links(since_date: tuple[int, int]) -> list[dict]:
             logger.warning(f"REM: failed to parse row {period_text}: {e}")
             continue
 
-    logger.info(f"REM: found {len(links)} publication links")
     return sorted(links, key=lambda x: x["date"])
 
 
 def get_xlsx_from_publication(pub_url: str) -> str | None:
     try:
-        r = requests.get(pub_url, timeout=30)
+        # BCRA has certificate issues
+        r = requests.get(pub_url, timeout=30, verify=False)
         r.raise_for_status()
         soup = BeautifulSoup(r.text, "html.parser")
 
@@ -253,7 +256,8 @@ def get_xlsx_from_publication(pub_url: str) -> str | None:
 
 def download_and_parse_rem(url: str) -> list[float]:
     try:
-        r = requests.get(url, timeout=30)
+        # BCRA has certificate issues
+        r = requests.get(url, timeout=30, verify=False)
         r.raise_for_status()
 
         wb = openpyxl.load_workbook(io.BytesIO(r.content), data_only=True)
@@ -309,12 +313,10 @@ def get_last_date_from_sheet() -> date:
                     continue
 
         if dates:
-            last_date = max(dates)
-            logger.info(f"Last date in sheet: {last_date}")
-            return last_date
+            return max(dates)
 
     except Exception as e:
-        logger.warning(f"Failed to get last date from sheet: {e}, using default {BACKFILL_FROM}")
+        logger.error(f"Failed to get last date from sheet: {e}")
 
     return BACKFILL_FROM
 
@@ -324,7 +326,6 @@ def update_sheets(cer_data, ccl_data, rem_reports):
     ss = client.open_by_key(SPREADSHEET_ID)
 
     if cer_data or ccl_data:
-        logger.info(f"Updating {HISTORIC_SHEET}...")
         ws_h = ss.worksheet(HISTORIC_SHEET)
 
         existing_rows = ws_h.get_all_values()[FIRST_DATA_ROW - 1 :]
@@ -360,7 +361,6 @@ def update_sheets(cer_data, ccl_data, rem_reports):
         )
 
     if rem_reports:
-        logger.info(f"Updating {REM_SHEET}...")
         ws_r = ss.worksheet(REM_SHEET)
 
         existing_rem = ws_r.get_all_values()[3:]
@@ -412,31 +412,48 @@ def main():
             logger.error("Start date seems unreasonably old (before 2000)")
             return
     else:
-        logger.info("Searching for last updated date in sheet...")
         since_dt = get_last_date_from_sheet()
 
     until_dt = date.today()
+    print(f"Updating dataset from {since_dt} to {until_dt}...")
 
-    logger.info(f"=== Updating dataset from {since_dt} to {until_dt} ===")
+    # Paralelizar fetch de datos
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        # Lanzar CER, CCL Ambito, CCL today en paralelo
+        future_cer = executor.submit(fetch_cer, since_dt, until_dt)
+        future_ccl = executor.submit(fetch_ccl_ambito, since_dt, until_dt)
+        future_today = executor.submit(fetch_ccl_today)
 
-    cer = fetch_cer(since_dt, until_dt)
-    ccl = fetch_ccl_ambito(since_dt, until_dt)
-    today = fetch_ccl_today()
-    if today and today[0] >= since_dt:
-        ccl[today[0]] = today[1]
+        # Esperar resultados
+        cer = future_cer.result()
+        ccl = future_ccl.result()
+        today = future_today.result()
 
+        if today and today[0] >= since_dt:
+            ccl[today[0]] = today[1]
+
+    # REM: paralelizar procesamiento de publicaciones
     rem_links = get_rem_publication_links((since_dt.year, since_dt.month))
     rem_reports = {}
-    for pub in rem_links:
-        logger.info(f"REM: processing {pub['period']}...")
+
+    def process_rem_publication(pub):
         xlsx = get_xlsx_from_publication(pub["url"])
         if xlsx:
             projs = download_and_parse_rem(xlsx)
             if projs:
-                rem_reports[f"{pub['date'][0]}-{pub['date'][1]:02d}-01"] = projs
+                return (f"{pub['date'][0]}-{pub['date'][1]:02d}-01", projs)
+        return None
+
+    with ThreadPoolExecutor(max_workers=3) as executor:
+        futures = [executor.submit(process_rem_publication, pub) for pub in rem_links]
+        for future in as_completed(futures):
+            result = future.result()
+            if result:
+                month_key, projs = result
+                rem_reports[month_key] = projs
 
     update_sheets(cer, ccl, rem_reports)
-    logger.info("Dataset updated successfully")
+    print("Dataset updated successfully")
 
 
 if __name__ == "__main__":

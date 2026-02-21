@@ -109,6 +109,10 @@ Si preferís crear tus propias credenciales OAuth (usuarios avanzados), seguí l
 - `token.json` - Tu token de acceso personal (en `.gitignore`, NUNCA compartir)
 - Ambos archivos deben estar en la raíz del proyecto
 
+### Nota sobre SSL y BCRA
+
+El código usa `verify=False` **únicamente** para requests al BCRA (Banco Central de Argentina) debido a problemas conocidos con sus certificados SSL. Todas las demás conexiones (Google Sheets, dolarapi, Ambito) usan verificación SSL completa. Esta es una excepción necesaria y documentada para acceder a datos oficiales de inflación.
+
 ## Documentación
 
 - [Diccionario de Columnas](docs/COLUMNAS.md) - Explicación detallada de cada columna
