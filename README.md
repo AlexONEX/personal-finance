@@ -85,7 +85,6 @@ El spreadsheet tiene 5 hojas:
 - **historic_data**: Datos históricos de CER y CCL (actualizado por `fetch_data.py`)
 - **REM**: Proyecciones de inflación del BCRA (actualizado por `fetch_data.py`)
 - **impuestos**: Tasas de descuentos (Jubilación 11%, PAMI 3%, Obra Social 3%)
-- **Panel**: Instrucciones para sincronización interna
 
 ## Seguridad y Credenciales
 
