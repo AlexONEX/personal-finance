@@ -308,44 +308,6 @@ def setup_ingresos(ss: gspread.Spreadsheet):
     apply_formatting(ss, ws.id, reqs)
 
 
-def setup_panel(ss: gspread.Spreadsheet):
-    print(f"Configurando {PANEL_SHEET}...")
-    ws = get_or_create_worksheet(ss, PANEL_SHEET, rows=20, cols=10)
-    ws.clear()
-    content = [
-        ["PANEL DE CONTROL"],
-        [""],
-        ["Instrucciones para Sincronización Interna (JavaScript):"],
-        ["1. Arriba en el menú de Google Sheets, ve a 'Extensiones' -> 'Apps Script'"],
-        ["2. Copia el contenido del archivo 'apps_script.js' del repositorio"],
-        ["3. Pégalo en el editor de Google y guarda (Ctrl+S)"],
-        ["4. Recarga esta página"],
-        ["5. Aparecerá un menú arriba llamado 'Tracker' para actualizar CER y CCL"],
-        [""],
-        ["Nota: El REM (Proyecciones) sigue requiriendo el script de Python."],
-        [""],
-        ["Links útiles:"],
-        ["- BCRA API (CER): https://api.bcra.gob.ar"],
-        ["- Ambito (CCL): https://mercados.ambito.com"],
-    ]
-    ws.update(range_name="A1", values=content)
-    reqs = [
-        {
-            "repeatCell": {
-                "range": {"sheetId": ws.id, "startRowIndex": 0, "endRowIndex": 1},
-                "cell": {
-                    "userEnteredFormat": {
-                        "textFormat": {"bold": True, "fontSize": 14},
-                        "horizontalAlignment": "CENTER",
-                    }
-                },
-                "fields": "userEnteredFormat(textFormat,horizontalAlignment)",
-            }
-        }
-    ]
-    apply_formatting(ss, ws.id, reqs)
-
-
 def main():
     if not SPREADSHEET_ID:
         print("ERROR: SPREADSHEET_ID no definido en .env")
@@ -356,7 +318,6 @@ def main():
     setup_historic(ss)
     setup_rem(ss)
     setup_ingresos(ss)
-    setup_panel(ss)
     print(
         f"\nSetup completo: https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit"
     )
