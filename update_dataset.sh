@@ -1,13 +1,11 @@
 #!/bin/bash
-# update_daily.sh
+# update_dataset.sh
 #
-# Daily update script for Ingresos tracker.
-# Fetches latest CER + CCL data, then recomputes monthly aggregates.
+# Actualiza el dataset de mercado (CER, CCL, REM) desde la última fecha registrada.
+# Llena automáticamente todos los datos faltantes hasta hoy.
 #
 # Usage:
-#   ./update_daily.sh
-#
-# For automation, see: automation/README.md
+#   ./update_dataset.sh
 
 set -euo pipefail
 
@@ -18,19 +16,18 @@ LOG_FILE="$SCRIPT_DIR/logs/update_$(date +%Y%m%d_%H%M%S).log"
 mkdir -p "$(dirname "$LOG_FILE")"
 
 echo "============================================" | tee -a "$LOG_FILE"
-echo "Ingresos Daily Update - $(date)" | tee -a "$LOG_FILE"
+echo "Ingresos Dataset Update - $(date)" | tee -a "$LOG_FILE"
 echo "============================================" | tee -a "$LOG_FILE"
 
-# Step 1: Fetch all data (CER, CCL, REM)
 echo "" | tee -a "$LOG_FILE"
-echo "[1/1] Fetching all market data..." | tee -a "$LOG_FILE"
+echo "Actualizando datos de mercado..." | tee -a "$LOG_FILE"
 if uv run fetch_data.py 2>&1 | tee -a "$LOG_FILE"; then
-    echo "✓ Update complete" | tee -a "$LOG_FILE"
+    echo "✓ Dataset actualizado" | tee -a "$LOG_FILE"
 else
-    echo "✗ Update failed" | tee -a "$LOG_FILE"
+    echo "✗ Actualización fallida" | tee -a "$LOG_FILE"
     exit 1
 fi
 
 echo "" | tee -a "$LOG_FILE"
-echo "✓ Daily update complete" | tee -a "$LOG_FILE"
+echo "✓ Actualización completa" | tee -a "$LOG_FILE"
 echo "============================================" | tee -a "$LOG_FILE"

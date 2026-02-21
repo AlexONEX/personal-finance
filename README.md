@@ -32,37 +32,45 @@ Sistema automatizado para el seguimiento de ingresos personales en Argentina, co
    uv run fetch_data.py
    ```
 
-La primera vez que ejecutes cualquier script, se abrirá un navegador para autorizar el acceso a Google Sheets. El token se guardará automáticamente.
+### Autorización OAuth (primera vez)
 
-## Uso Diario
+La primera vez que ejecutes cualquier script, se abrirá un navegador para autorizar el acceso a Google Sheets:
 
-### Actualizar datos de mercado (CER, CCL, REM)
+1. Seleccioná tu cuenta de Google
+2. Verás un warning: **"Google hasn't verified this app"**
+   - Esto es normal - la app usa credenciales compartidas del repo
+   - Click **"Advanced"**
+   - Click **"Go to ingresos-tracker (unsafe)"**
+3. Click **"Allow"** para dar permisos de acceso a Sheets
+4. El token se guardará automáticamente en `token.json`
 
-```bash
-./update_daily.sh
-```
+**¿Por qué aparece este warning?**
+La app no está "verificada" por Google porque usamos credenciales OAuth compartidas (`credentials.json`) incluidas en el repositorio. Esto permite que funcione sin que cada usuario tenga que crear su propio proyecto en Google Cloud. Es seguro porque solo pedimos permisos de lectura/escritura de Sheets y el código es open source.
 
-### Cargar tus ingresos
+Si preferís usar tus propias credenciales OAuth, seguí la guía en [docs/OAUTH_SETUP.md](docs/OAUTH_SETUP.md).
 
-Abrí la hoja `Ingresos` en tu spreadsheet y completá solo estas columnas:
-- **A (Fecha)**: Primer día del mes (ej: 01/06/2024)
-- **B (Bruto)**: Sueldo bruto del mes
-- **G (SAC Bruto)**: Aguinaldo (solo Jun/Dic)
-- **I (Bono Neto)**: Bonos extraordinarios (opcional)
-- **J (Comida)**: Beneficio de comida (opcional)
-- **K (Otros Beneficios)**: Otros beneficios (opcional)
+## Uso Mensual
 
-Todo lo demás se calcula automáticamente.
+**Cada vez que cobrás el sueldo:**
 
-### Automatización (opcional)
+1. **Actualizar datos de mercado (CER, CCL, REM)**
+   ```bash
+   ./update_dataset.sh
+   ```
 
-Para actualizar los datos automáticamente todos los días:
+   Este script busca automáticamente la última fecha actualizada en el sheet y completa todos los datos faltantes hasta hoy.
 
-```bash
-./automation/install.sh
-```
+2. **Cargar tu sueldo del mes**
 
-Esto configura un job que corre a las 9:00 AM todos los días.
+   Abrí la hoja `Ingresos` en tu spreadsheet y completá solo estas columnas:
+   - **A (Fecha)**: Primer día del mes (ej: 01/06/2024)
+   - **B (Bruto)**: Sueldo bruto del mes
+   - **G (SAC Bruto)**: Aguinaldo (solo Jun/Dic)
+   - **I (Bono Neto)**: Bonos extraordinarios (opcional)
+   - **J (Comida)**: Beneficio de comida (opcional)
+   - **K (Otros Beneficios)**: Otros beneficios (opcional)
+
+   Todo lo demás se calcula automáticamente.
 
 ## Estructura del Spreadsheet
 
@@ -78,7 +86,6 @@ El spreadsheet tiene 5 hojas:
 
 - [Diccionario de Columnas](docs/COLUMNAS.md) - Explicación detallada de cada columna
 - [OAuth Setup](docs/OAUTH_SETUP.md) - Cómo configurar tus propias credenciales OAuth (opcional)
-- [Automatización](automation/README.md) - Detalles sobre la actualización automática diaria
 
 ## Configuración
 

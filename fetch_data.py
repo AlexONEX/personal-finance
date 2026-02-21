@@ -192,6 +192,31 @@ def download_and_parse_rem(url: str) -> list[float]:
         return []
 
 
+def get_last_date_from_sheet() -> date:
+    """Obtiene la última fecha registrada en historic_data para actualizar desde ahí."""
+    try:
+        client = get_sheets_client()
+        ss = client.open_by_key(SPREADSHEET_ID)
+        ws_h = ss.worksheet(HISTORIC_SHEET)
+        existing_rows = ws_h.get_all_values()[FIRST_DATA_ROW - 1 :]
+
+        dates = []
+        for row in existing_rows:
+            if len(row) >= 1 and row[0]:
+                try:
+                    d = datetime.strptime(row[0], "%d/%m/%Y").date()
+                    dates.append(d)
+                except ValueError:
+                    continue
+
+        if dates:
+            return max(dates)
+    except Exception:
+        pass
+
+    return BACKFILL_FROM
+
+
 def update_sheets(cer_data, ccl_data, rem_reports):
     client = get_sheets_client()
     ss = client.open_by_key(SPREADSHEET_ID)
@@ -257,19 +282,27 @@ def update_sheets(cer_data, ccl_data, rem_reports):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Fetch all data for Ingresos Tracker")
+    parser = argparse.ArgumentParser(
+        description="Fetch all data for Ingresos Tracker. "
+        "Por defecto, actualiza desde la última fecha registrada en el sheet."
+    )
     parser.add_argument(
         "--since",
         type=str,
-        default=BACKFILL_FROM.isoformat(),
-        help="Fecha inicio YYYY-MM-DD",
+        default=None,
+        help="Fecha inicio YYYY-MM-DD (opcional, por defecto usa última fecha del sheet)",
     )
     args = parser.parse_args()
 
-    since_dt = datetime.strptime(args.since, "%Y-%m-%d").date()
+    if args.since:
+        since_dt = datetime.strptime(args.since, "%Y-%m-%d").date()
+    else:
+        print("  Buscando última fecha actualizada en el sheet...")
+        since_dt = get_last_date_from_sheet()
+
     until_dt = date.today()
 
-    print(f"--- Iniciando actualización desde {since_dt} ---")
+    print(f"--- Actualizando dataset desde {since_dt} hasta {until_dt} ---")
 
     cer = fetch_cer(since_dt, until_dt)
     ccl = fetch_ccl_ambito(since_dt, until_dt)

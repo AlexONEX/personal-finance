@@ -149,9 +149,8 @@ def main() -> None:
     print("     - Column G: SAC Bruto (only for Jun/Dec)")
     print("     - Columns I-K: Bonos, Comida, Viajes (optional)")
     print("  3. All formulas will auto-calculate!")
-    print("\nTo update market data:")
-    print("  ./update_daily.sh              # Manual update")
-    print("  ./automation/install.sh        # Automatic daily updates (9 AM)")
+    print("\nTo update market data (run monthly when you get paid):")
+    print("  ./update_dataset.sh")
     print()
 
 
