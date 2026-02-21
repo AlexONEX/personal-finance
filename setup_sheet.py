@@ -20,13 +20,10 @@ from src.sheets.structure import (
 
 load_dotenv()
 
-# ---------------------------------------------------------------------------
-# Config
-# ---------------------------------------------------------------------------
 SPREADSHEET_ID = os.environ.get("SPREADSHEET_ID")
 
 FIRST_DATA_ROW = 3
-MAX_ROWS = 1000  # Formatear hasta la fila 1000
+MAX_ROWS = 1000
 
 HISTORIC_FIRST_DATA_ROW = 4
 HISTORIC_SHEET = "historic_data"
@@ -35,7 +32,6 @@ TAX_SHEET = "impuestos"
 REM_SHEET = "REM"
 PANEL_SHEET = "Panel"
 
-# Colors (RGB 0.0 – 1.0)
 C = {
     "SUELDO": {"red": 0.8, "green": 0.9, "blue": 1.0},
     "AGUINALDO": {"red": 0.9, "green": 1.0, "blue": 0.9},
@@ -285,7 +281,6 @@ def setup_ingresos(ss: gspread.Spreadsheet):
                 }
             )
 
-    # Formatear COLUMNAS COMPLETAS (hasta MAX_ROWS)
     for col_let, fmt_config in COLUMN_FORMATS.items():
         gs_format = {}
         if fmt_config["type"] == "DATE":
@@ -318,16 +313,14 @@ def setup_panel(ss: gspread.Spreadsheet):
     ws = get_or_create_worksheet(ss, PANEL_SHEET, rows=20, cols=10)
     ws.clear()
     content = [
-        ["🚀 PANEL DE CONTROL"],
+        ["PANEL DE CONTROL"],
         [""],
         ["Instrucciones para Sincronización Interna (JavaScript):"],
         ["1. Arriba en el menú de Google Sheets, ve a 'Extensiones' -> 'Apps Script'"],
         ["2. Copia el contenido del archivo 'apps_script.js' del repositorio"],
         ["3. Pégalo en el editor de Google y guarda (Ctrl+S)"],
         ["4. Recarga esta página"],
-        [
-            "5. ¡Listo! Aparecerá un menú arriba llamado '📈 Tracker' para actualizar CER y CCL"
-        ],
+        ["5. Aparecerá un menú arriba llamado 'Tracker' para actualizar CER y CCL"],
         [""],
         ["Nota: El REM (Proyecciones) sigue requiriendo el script de Python."],
         [""],
@@ -365,7 +358,7 @@ def main():
     setup_ingresos(ss)
     setup_panel(ss)
     print(
-        f"\n✓ Setup completo: https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit"
+        f"\nSetup completo: https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit"
     )
 
 

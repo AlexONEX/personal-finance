@@ -2,10 +2,6 @@
 
 Script unificado para la obtención de datos del Ingresos Tracker.
 Obtiene CER (BCRA), CCL (Ambito/dolarapi) y proyecciones REM (BCRA).
-
-Uso:
-    uv run fetch_data.py                      # Actualización incremental
-    uv run fetch_data.py --since 2022-01-01   # Backfill total
 """
 
 import argparse
@@ -22,21 +18,17 @@ from dotenv import load_dotenv
 
 from src.connectors.sheets import get_sheets_client
 
-# Configuración de advertencias y logs
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 warnings.filterwarnings("ignore", message="Unverified HTTPS request")
 
 load_dotenv()
 
-# ---------------------------------------------------------------------------
-# Configuración Global
-# ---------------------------------------------------------------------------
 SPREADSHEET_ID = os.environ.get("SPREADSHEET_ID")
 SERVICE_ACCOUNT = "service_account.json"
 
 HISTORIC_SHEET = "historic_data"
 REM_SHEET = "REM"
-FIRST_DATA_ROW = 4  # Metadata(1) + Headers(2) + Spacer(3)
+FIRST_DATA_ROW = 4
 BACKFILL_FROM = date(2022, 1, 1)
 
 BCRA_API_URL = "https://api.bcra.gob.ar/estadisticas/v4.0/Monetarias/30"
@@ -62,15 +54,10 @@ MONTHS_MAP = {
 }
 
 
-# ---------------------------------------------------------------------------
-# Lógica de CER y CCL (Histórico)
-# ---------------------------------------------------------------------------
-
-
 def fetch_cer(since: date, until: date) -> dict[date, float]:
     results = {}
     offset, limit = 0, 3000
-    print(f"  CER: obteniendo {since} → {until} desde BCRA...")
+    print(f"  CER: obteniendo {since} -> {until} desde BCRA...")
     while True:
         try:
             resp = requests.get(
@@ -105,7 +92,7 @@ def fetch_cer(since: date, until: date) -> dict[date, float]:
 
 def fetch_ccl_ambito(since: date, until: date) -> dict[date, float]:
     url = AMBITO_CCL_URL.format(desde=since.isoformat(), hasta=until.isoformat())
-    print(f"  CCL: obteniendo {since} → {until} desde Ambito...")
+    print(f"  CCL: obteniendo {since} -> {until} desde Ambito...")
     out = {}
     try:
         resp = requests.get(url, timeout=30, headers={"User-Agent": "Mozilla/5.0"})
@@ -135,11 +122,6 @@ def fetch_ccl_today() -> tuple[date, float] | None:
     except Exception:
         pass
     return None
-
-
-# ---------------------------------------------------------------------------
-# Lógica de REM (Proyecciones)
-# ---------------------------------------------------------------------------
 
 
 def get_rem_publication_links(since_date: tuple[int, int]) -> list[dict]:
@@ -210,24 +192,16 @@ def download_and_parse_rem(url: str) -> list[float]:
         return []
 
 
-# ---------------------------------------------------------------------------
-# Escritura en Google Sheets
-# ---------------------------------------------------------------------------
-
-
 def update_sheets(cer_data, ccl_data, rem_reports):
     client = get_sheets_client()
     ss = client.open_by_key(SPREADSHEET_ID)
 
-    # 1. Update historic_data (Merge logic)
     if cer_data or ccl_data:
         print(f"  Actualizando {HISTORIC_SHEET}...")
         ws_h = ss.worksheet(HISTORIC_SHEET)
 
-        # Leer datos actuales para no borrar historial previo al 'since'
         existing_rows = ws_h.get_all_values()[FIRST_DATA_ROW - 1 :]
         data_map = {}
-        # Cargar existentes
         for row in existing_rows:
             if len(row) >= 1 and row[0]:
                 data_map[row[0]] = [
@@ -235,7 +209,6 @@ def update_sheets(cer_data, ccl_data, rem_reports):
                     row[2] if len(row) > 2 else "",
                 ]
 
-        # Mezclar con nuevos
         for d, val in cer_data.items():
             fmt_d = d.strftime("%d/%m/%Y")
             if fmt_d not in data_map:
@@ -248,7 +221,6 @@ def update_sheets(cer_data, ccl_data, rem_reports):
                 data_map[fmt_d] = ["", ""]
             data_map[fmt_d][1] = val
 
-        # Preparar payload ordenado
         sorted_dates = sorted(
             data_map.keys(), key=lambda x: datetime.strptime(x, "%d/%m/%Y")
         )
@@ -260,27 +232,22 @@ def update_sheets(cer_data, ccl_data, rem_reports):
             value_input_option="USER_ENTERED",
         )
 
-        # 2. Update REM matrix (Merge logic)
         if rem_reports:
             print(f"  Actualizando {REM_SHEET}...")
             ws_r = ss.worksheet(REM_SHEET)
 
-            # Leer actuales
-            existing_rem = ws_r.get_all_values()[3:]  # Desde fila 4
+            existing_rem = ws_r.get_all_values()[3:]
             rem_map = {}
             for row in existing_rem:
                 if len(row) >= 1 and row[0]:
-                    rem_map[row[0]] = row[1:9]  # Columnas B a I
+                    rem_map[row[0]] = row[1:9]
 
-            # Mezclar con nuevos
             for m, projs in rem_reports.items():
                 rem_map[m] = projs
 
-            # Preparar payload ordenado
             sorted_months = sorted(rem_map.keys())
             payload = [[m] + rem_map[m] for m in sorted_months]
 
-            # Borrar rango amplio y reescribir todo limpio
             ws_r.batch_clear(["A4:I500"])
             ws_r.update(
                 range_name=f"A4:I{4 + len(payload) - 1}",
@@ -304,14 +271,12 @@ def main():
 
     print(f"--- Iniciando actualización desde {since_dt} ---")
 
-    # CER + CCL
     cer = fetch_cer(since_dt, until_dt)
     ccl = fetch_ccl_ambito(since_dt, until_dt)
     today = fetch_ccl_today()
     if today and today[0] >= since_dt:
         ccl[today[0]] = today[1]
 
-    # REM
     rem_links = get_rem_publication_links((since_dt.year, since_dt.month))
     rem_reports = {}
     for pub in rem_links:
@@ -323,7 +288,7 @@ def main():
                 rem_reports[f"{pub['date'][0]}-{pub['date'][1]:02d}-01"] = projs
 
     update_sheets(cer, ccl, rem_reports)
-    print("\n✓ Datos actualizados correctamente.")
+    print("\nDatos actualizados correctamente.")
 
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@
 
 Sistema automatizado para el seguimiento de ingresos personales en Argentina, con ajuste por inflación (CER), proyecciones de mercado (REM) y comparativa en dólares (CCL).
 
-## 📊 Diccionario de Columnas (Hoja 'Ingresos')
+## Diccionario de Columnas (Hoja 'Ingresos')
 
 ### 1. DATOS BASE & INGRESOS
 *   **A - Fecha**: Mes del registro (dd/mm/aaaa). Se recomienda usar el día 1 de cada mes.
@@ -56,8 +56,8 @@ Sistema automatizado para el seguimiento de ingresos personales en Argentina, co
 
 ---
 
-## 🚀 Uso Rápido
+## Uso Rápido
 
 1.  **Actualizar Datos**: Ejecutá `./update_daily.sh` para bajar CER, CCL y REM (actualiza historial desde 2022).
-2.  **Cargar Sueldo**: Abrí la hoja `Ingresos` y cargá solo las columnas blancas (**Fecha**, **Bruto**, **SAC**, **Bonos**, **Beneficios**).
+2.  **Cargar Sueldo**: Abrí la hoja `Ingresos` y cargá solo las columnas blancas (Fecha, Bruto, SAC, Bonos, Beneficios).
 3.  **Configurar Tasas**: Si cambian los aportes de ley, editalos en la hoja `impuestos`.

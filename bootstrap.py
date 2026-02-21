@@ -1,18 +1,6 @@
 """bootstrap.py
 
 One-command setup for the Ingresos tracker.
-
-Steps:
-  1. OAuth login (generates token.json)
-  2. Create new spreadsheet or use existing
-  3. Save SPREADSHEET_ID to .env
-  4. Run setup_sheet.py (create sheet structure)
-  5. Run fetch_historic.py --since HISTORIC_START_DATE
-  6. Print success message with sheet URL
-
-Usage:
-    uv run bootstrap.py
-    uv run bootstrap.py --use-existing SPREADSHEET_ID
 """
 
 import argparse
@@ -32,7 +20,6 @@ ENV_EXAMPLE = ".env.example"
 
 
 def create_env_file() -> None:
-    """Create .env from .env.example if it doesn't exist."""
     if Path(ENV_FILE).exists():
         return
 
@@ -49,15 +36,6 @@ def create_env_file() -> None:
 
 
 def get_or_create_spreadsheet(client, use_existing: str | None) -> tuple[str, str]:
-    """Get existing or create new spreadsheet.
-
-    Args:
-        client: Authenticated gspread client
-        use_existing: SPREADSHEET_ID to use, or None to create new
-
-    Returns:
-        (spreadsheet_id, spreadsheet_url)
-    """
     if use_existing:
         print(f"Using existing spreadsheet: {use_existing}")
         spreadsheet = client.open_by_key(use_existing)
@@ -65,29 +43,27 @@ def get_or_create_spreadsheet(client, use_existing: str | None) -> tuple[str, st
 
     print(f"Creating new spreadsheet: {DEFAULT_SHEET_NAME!r}...")
     spreadsheet = client.create(DEFAULT_SHEET_NAME)
-    print(f"✓ Spreadsheet created: {spreadsheet.url}")
+    print(f"Spreadsheet created: {spreadsheet.url}")
     return spreadsheet.id, spreadsheet.url
 
 
 def update_env(key: str, value: str) -> None:
-    """Update or add key=value in .env file."""
     env_path = Path(ENV_FILE)
     if not env_path.exists():
         create_env_file()
     set_key(env_path, key, value)
-    print(f"✓ {key} saved to {ENV_FILE}")
+    print(f"{key} saved to {ENV_FILE}")
 
 
 def run_command(cmd: list[str], description: str) -> None:
-    """Run a shell command and exit on failure."""
     print(f"\n{description}...")
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
-        print(f"✗ Failed: {description}", file=sys.stderr)
+        print(f"Failed: {description}", file=sys.stderr)
         print(result.stderr, file=sys.stderr)
         sys.exit(1)
     print(result.stdout)
-    print(f"✓ {description} complete")
+    print(f"{description} complete")
 
 
 def main() -> None:
@@ -114,7 +90,7 @@ def main() -> None:
     parser.add_argument(
         "--skip-fetch",
         action="store_true",
-        help="Skip fetching historical data (useful for testing)",
+        help="Skip fetching historical data",
     )
     args = parser.parse_args()
 
@@ -122,24 +98,21 @@ def main() -> None:
     print("Ingresos Tracker - Bootstrap")
     print("=" * 60)
 
-    # Step 1: Create .env if needed
     create_env_file()
     load_dotenv()
 
-    # Step 2: OAuth authentication
     print("\n[1/5] Authenticating with Google...")
     try:
         client = get_sheets_client()
-        print("✓ Authentication successful")
+        print("Authentication successful")
     except FileNotFoundError as e:
-        print(f"\n✗ {e}", file=sys.stderr)
+        print(f"\n{e}", file=sys.stderr)
         print("\nPlease follow the instructions in OAUTH_SETUP.md", file=sys.stderr)
         sys.exit(1)
     except Exception as e:
-        print(f"\n✗ Authentication failed: {e}", file=sys.stderr)
+        print(f"\nAuthentication failed: {e}", file=sys.stderr)
         sys.exit(1)
 
-    # Step 3: Get or create spreadsheet
     print("\n[2/5] Setting up spreadsheet...")
     spreadsheet_id, spreadsheet_url = get_or_create_spreadsheet(
         client, args.use_existing
@@ -147,17 +120,14 @@ def main() -> None:
     update_env("SPREADSHEET_ID", spreadsheet_id)
     update_env("HISTORIC_START_DATE", args.start_date.isoformat())
 
-    # Reload .env to pick up new values
     load_dotenv(override=True)
 
-    # Step 4: Create sheet structure
     print("\n[3/5] Creating sheet structure...")
     run_command(
         ["uv", "run", "setup_sheet.py"],
         "Setup sheet structure",
     )
 
-    # Step 5: Fetch historical data
     if not args.skip_fetch:
         print("\n[4/5] Fetching all historical data (CER, CCL, REM)...")
         run_command(
@@ -167,13 +137,12 @@ def main() -> None:
     else:
         print("\n[4/5] Skipping data fetch (--skip-fetch)")
 
-    # Success
     print("\n" + "=" * 60)
-    print("✓ Setup complete!")
+    print("Setup complete!")
     print("=" * 60)
     print(f"\nSpreadsheet URL: {spreadsheet_url}")
     print("\nNext steps:")
-    print('  1. Open the "test" tab in your spreadsheet')
+    print('  1. Open the "Ingresos" tab in your spreadsheet')
     print("  2. Fill in your monthly income data:")
     print("     - Column A: Fecha (first day of month, e.g., 01/06/2024)")
     print("     - Column B: Sueldo Bruto")

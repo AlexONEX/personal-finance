@@ -1,8 +1,7 @@
 """Estructura REORGANIZADA de la sheet Ingresos - Feb 2026."""
 
-# Row 1: Group headers (con merged ranges)
 INCOME_GROUPS = [
-    ("A", "A", ""),  # Fecha
+    ("A", "A", ""),
     ("B", "F", "SUELDO"),
     ("G", "H", "AGUINALDO"),
     ("I", "I", "BONOS"),
@@ -16,10 +15,7 @@ INCOME_GROUPS = [
     ("AH", "AJ", "VS ÚLTIMO AUMENTO USD"),
 ]
 
-# Row 2: Column headers con fórmulas
-# {r} = número de fila actual, {r-1} = fila anterior
 INCOME_COLUMNS = [
-    # GRUPO 1: DATOS BASE & INGRESOS (A-L)
     ("A", "Fecha", None),
     ("B", "Bruto", None),
     (
@@ -48,7 +44,6 @@ INCOME_COLUMNS = [
         "Total Neto",
         '=IF(OR(ISBLANK(F{r}), F{r}="-"), "-", IFERROR(IF(SUM(F{r}:K{r})=0, "-", SUM(F{r}:K{r})), "-"))',
     ),
-    # GRUPO 2: INFLACIÓN / CER (M-P)
     (
         "M",
         "Δ% CER MoM",
@@ -69,7 +64,6 @@ INCOME_COLUMNS = [
         "Poder Adq. Acum.",
         '=IF(OR(ISBLANK(B{r}), B{r}=0), "-", IFERROR((F{r}/$F$3) / (VLOOKUP(A{r}, historic_data!$A$4:$B, 2, TRUE) / VLOOKUP($A$3, historic_data!$A$4:$B, 2, TRUE)) - 1, "-"))',
     ),
-    # GRUPO 3: VS ÚLTIMO AUMENTO (Q-T)
     (
         "Q",
         "Bruto Base",
@@ -90,7 +84,6 @@ INCOME_COLUMNS = [
         "Paridad CER",
         '=IF(OR(ISBLANK(B{r}), B{r}=0, R{r}="-"), "-", IFERROR(Q{r} * (VLOOKUP(A{r}, historic_data!$A$4:$B, 2, TRUE)/R{r}), "-"))',
     ),
-    # GRUPO 4: ANÁLISIS TOTAL (U-V)
     (
         "U",
         "Ingreso a Valor Hoy",
@@ -101,7 +94,6 @@ INCOME_COLUMNS = [
         "Δ Real vs Año Ant.",
         '=IF(OR(ISBLANK(B{r}), B{r}=0), "-", IFERROR((F{r} / VLOOKUP(EDATE(A{r},-12), $A:$F, 6, FALSE)) / (VLOOKUP(A{r}, historic_data!$A$4:$B, 2, TRUE) / VLOOKUP(EDATE(A{r},-12), historic_data!$A$4:$B, 2, TRUE)) - 1, "-"))',
     ),
-    # GRUPO 5: PROYECCIONES REM (W-AB)
     (
         "W",
         "REM 3m (%)",
@@ -116,7 +108,6 @@ INCOME_COLUMNS = [
     ),
     ("AA", "Objetivo 6m", '=IF(Z{r}="-", "-", IFERROR(B{r} * (1+Z{r}), "-"))'),
     ("AB", "Δ 6m (%)", "=Z{r}"),
-    # GRUPO 6: DÓLARES / USD (AC-AG)
     (
         "AC",
         "CCL",
@@ -138,7 +129,6 @@ INCOME_COLUMNS = [
         "Poder Adq. Acum. (USD)",
         '=IF(AE{r}="-", "-", IFERROR((AE{r}/$AE$3)-1, "-"))',
     ),
-    # GRUPO 7: VS ÚLTIMO AUMENTO USD (AH-AJ)
     (
         "AH",
         "Atraso USD",
@@ -156,7 +146,6 @@ INCOME_COLUMNS = [
     ),
 ]
 
-# Formatos por columna
 COLUMN_FORMATS = {
     "A": {"type": "DATE", "pattern": "dd/mm/yyyy"},
     "B": {"type": "CURRENCY", "pattern": "$#,##0"},
