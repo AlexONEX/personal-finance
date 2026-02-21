@@ -5,8 +5,7 @@ Este directorio contiene los archivos para automatizar la actualización diaria 
 ## ¿Qué hace?
 
 El job ejecuta `update_daily.sh` todos los días a las 9:00 AM, que:
-1. Fetches latest CER + CCL data (`fetch_historic.py`)
-2. Recomputes monthly aggregates (`compute_market.py`)
+1. Obtiene datos actualizados de CER, CCL y REM (`fetch_data.py`)
 
 Los datos se actualizan automáticamente en tu spreadsheet sin intervención manual.
 
