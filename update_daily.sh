@@ -21,23 +21,13 @@ echo "============================================" | tee -a "$LOG_FILE"
 echo "Ingresos Daily Update - $(date)" | tee -a "$LOG_FILE"
 echo "============================================" | tee -a "$LOG_FILE"
 
-# Step 1: Fetch new historic data (incremental)
+# Step 1: Fetch all data (CER, CCL, REM)
 echo "" | tee -a "$LOG_FILE"
-echo "[1/2] Fetching latest CER + CCL data..." | tee -a "$LOG_FILE"
-if uv run fetch_historic.py 2>&1 | tee -a "$LOG_FILE"; then
-    echo "✓ Fetch complete" | tee -a "$LOG_FILE"
+echo "[1/1] Fetching all market data..." | tee -a "$LOG_FILE"
+if uv run fetch_data.py 2>&1 | tee -a "$LOG_FILE"; then
+    echo "✓ Update complete" | tee -a "$LOG_FILE"
 else
-    echo "✗ Fetch failed" | tee -a "$LOG_FILE"
-    exit 1
-fi
-
-# Step 2: Fetch latest REM projections
-echo "" | tee -a "$LOG_FILE"
-echo "[2/2] Fetching latest REM projections..." | tee -a "$LOG_FILE"
-if uv run fetch_rem.py 2>&1 | tee -a "$LOG_FILE"; then
-    echo "✓ REM fetch complete" | tee -a "$LOG_FILE"
-else
-    echo "✗ REM fetch failed" | tee -a "$LOG_FILE"
+    echo "✗ Update failed" | tee -a "$LOG_FILE"
     exit 1
 fi
 

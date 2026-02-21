@@ -159,20 +159,13 @@ def main() -> None:
 
     # Step 5: Fetch historical data
     if not args.skip_fetch:
-        print("\n[4/5] Fetching historical data...")
+        print("\n[4/5] Fetching all historical data (CER, CCL, REM)...")
         run_command(
-            ["uv", "run", "fetch_historic.py", "--since", args.start_date.isoformat()],
-            f"Fetch CER + CCL since {args.start_date}",
-        )
-
-        print("\n[5/5] Fetching historical REM projections...")
-        run_command(
-            ["uv", "run", "fetch_rem.py", "--since", args.start_date.strftime("%Y-%m")],
-            "Fetch historical REM data",
+            ["uv", "run", "fetch_data.py", "--since", args.start_date.isoformat()],
+            f"Fetch all data since {args.start_date}",
         )
     else:
-        print("\n[4/5] Skipping historical data fetch (--skip-fetch)")
-        print("[5/5] Skipping REM fetch (--skip-fetch)")
+        print("\n[4/5] Skipping data fetch (--skip-fetch)")
 
     # Success
     print("\n" + "=" * 60)
