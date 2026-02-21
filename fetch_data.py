@@ -179,11 +179,16 @@ def get_xlsx_from_publication(pub_url: str) -> str | None:
         for link in soup.find_all("a", href=True):
             text, href = link.get_text().lower(), link["href"].lower()
             if ("tablas" in text or "tablas" in href) and href.endswith(".xlsx"):
-                return (
-                    link["href"]
-                    if link["href"].startswith("http")
-                    else BCRA_BASE_URL + link["href"]
-                )
+                xlsx_url = link["href"]
+                if not xlsx_url.startswith("http"):
+                    xlsx_url = BCRA_BASE_URL + xlsx_url
+
+                # Fix for BCRA bug: redirect internal dev links to production
+                if "desa.bcra.net" in xlsx_url:
+                    xlsx_url = xlsx_url.replace(
+                        "sitiopublico.desa.bcra.net", "www.bcra.gob.ar"
+                    )
+                return xlsx_url
     except Exception:
         pass
     return None
@@ -214,35 +219,74 @@ def update_sheets(cer_data, ccl_data, rem_reports):
     client = get_sheets_client()
     ss = client.open_by_key(SPREADSHEET_ID)
 
-    # 1. Update historic_data
+    # 1. Update historic_data (Merge logic)
     if cer_data or ccl_data:
         print(f"  Actualizando {HISTORIC_SHEET}...")
         ws_h = ss.worksheet(HISTORIC_SHEET)
-        all_dates = sorted(cer_data.keys() | ccl_data.keys())
-        payload = [
-            [d.strftime("%d/%m/%Y"), cer_data.get(d, ""), ccl_data.get(d, "")]
-            for d in all_dates
-        ]
-        # Clear and write
-        ws_h.batch_clear([f"A{FIRST_DATA_ROW}:C2000"])
+
+        # Leer datos actuales para no borrar historial previo al 'since'
+        existing_rows = ws_h.get_all_values()[FIRST_DATA_ROW - 1 :]
+        data_map = {}
+        # Cargar existentes
+        for row in existing_rows:
+            if len(row) >= 1 and row[0]:
+                data_map[row[0]] = [
+                    row[1] if len(row) > 1 else "",
+                    row[2] if len(row) > 2 else "",
+                ]
+
+        # Mezclar con nuevos
+        for d, val in cer_data.items():
+            fmt_d = d.strftime("%d/%m/%Y")
+            if fmt_d not in data_map:
+                data_map[fmt_d] = ["", ""]
+            data_map[fmt_d][0] = val
+
+        for d, val in ccl_data.items():
+            fmt_d = d.strftime("%d/%m/%Y")
+            if fmt_d not in data_map:
+                data_map[fmt_d] = ["", ""]
+            data_map[fmt_d][1] = val
+
+        # Preparar payload ordenado
+        sorted_dates = sorted(
+            data_map.keys(), key=lambda x: datetime.strptime(x, "%d/%m/%Y")
+        )
+        payload = [[d, data_map[d][0], data_map[d][1]] for d in sorted_dates]
+
         ws_h.update(
             range_name=f"A{FIRST_DATA_ROW}:C{FIRST_DATA_ROW + len(payload) - 1}",
             values=payload,
             value_input_option="USER_ENTERED",
         )
 
-    # 2. Update REM matrix
-    if rem_reports:
-        print(f"  Actualizando {REM_SHEET}...")
-        ws_r = ss.worksheet(REM_SHEET)
-        sorted_reports = sorted(rem_reports.keys())
-        payload = [[m] + rem_reports[m] for m in sorted_reports]
-        ws_r.batch_clear(["A4:I100"])
-        ws_r.update(
-            range_name=f"A4:I{4 + len(payload) - 1}",
-            values=payload,
-            value_input_option="USER_ENTERED",
-        )
+        # 2. Update REM matrix (Merge logic)
+        if rem_reports:
+            print(f"  Actualizando {REM_SHEET}...")
+            ws_r = ss.worksheet(REM_SHEET)
+
+            # Leer actuales
+            existing_rem = ws_r.get_all_values()[3:]  # Desde fila 4
+            rem_map = {}
+            for row in existing_rem:
+                if len(row) >= 1 and row[0]:
+                    rem_map[row[0]] = row[1:9]  # Columnas B a I
+
+            # Mezclar con nuevos
+            for m, projs in rem_reports.items():
+                rem_map[m] = projs
+
+            # Preparar payload ordenado
+            sorted_months = sorted(rem_map.keys())
+            payload = [[m] + rem_map[m] for m in sorted_months]
+
+            # Borrar rango amplio y reescribir todo limpio
+            ws_r.batch_clear(["A4:I500"])
+            ws_r.update(
+                range_name=f"A4:I{4 + len(payload) - 1}",
+                values=payload,
+                value_input_option="USER_ENTERED",
+            )
 
 
 def main():
