@@ -108,9 +108,16 @@ Este proyecto incluye `credentials.json` (credenciales OAuth) en el repositorio 
    - Alguien podría spamear requests y Google revoca las credenciales compartidas → solución: regenerar
    - **NO hay riesgo** de acceso a cuentas de usuarios (cada uno autoriza la suya)
 
-### ¿Querés usar tus propias credenciales?
+### ⚠️ Recomendación: Creá tus propias credenciales
 
-Si preferís crear tus propias credenciales OAuth (usuarios avanzados), seguí la guía en [docs/OAUTH_SETUP.md](docs/OAUTH_SETUP.md).
+**Si vas a usar esta app regularmente**, es altamente recomendado que crees tus propias credenciales OAuth siguiendo [docs/OAUTH_SETUP.md](docs/OAUTH_SETUP.md).
+
+**¿Por qué?**
+1. **Puedo dar de baja las credenciales compartidas** en cualquier momento (por mantenimiento, seguridad, etc.)
+2. **Rate limits de Google**: Si el proyecto se hace popular, miles de usuarios compartiendo las mismas credenciales alcanzarían los límites de la API de Google Sheets (500 requests/100 segundos por proyecto)
+3. **Mayor control**: Tus propias credenciales te dan independencia total
+
+Las credenciales compartidas incluidas en el repo son solo para **probar la app rápidamente**. Para uso real/productivo, creá las tuyas (toma 5 minutos).
 
 ### Archivos importantes
 
