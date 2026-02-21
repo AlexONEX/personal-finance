@@ -82,6 +82,33 @@ El spreadsheet tiene 5 hojas:
 - **impuestos**: Tasas de descuentos (Jubilación 11%, PAMI 3%, Obra Social 3%)
 - **Panel**: Instrucciones para sincronización interna
 
+## Seguridad y Credenciales
+
+### ¿Por qué `credentials.json` está en el repositorio?
+
+Este proyecto incluye `credentials.json` (credenciales OAuth) en el repositorio para simplificar el setup. Esto es **seguro para aplicaciones desktop** porque:
+
+1. **OAuth para Desktop Apps (RFC 8252)**: Google específicamente indica que para aplicaciones nativas/desktop, el `client_secret` **no puede mantenerse confidencial** y es esperado que esté embebido en la app.
+
+2. **La seguridad real viene de**:
+   - Cada usuario autoriza **su propia cuenta** mediante el flujo OAuth en el navegador
+   - El `token.json` (que SÍ es secreto y contiene acceso a tu cuenta) está en `.gitignore` y nunca se comparte
+   - Los permisos se limitan solo a Google Sheets (scope específico)
+
+3. **Riesgos reales** (bajos):
+   - Alguien podría spamear requests y Google revoca las credenciales compartidas → solución: regenerar
+   - **NO hay riesgo** de acceso a cuentas de usuarios (cada uno autoriza la suya)
+
+### ¿Querés usar tus propias credenciales?
+
+Si preferís crear tus propias credenciales OAuth (usuarios avanzados), seguí la guía en [docs/OAUTH_SETUP.md](docs/OAUTH_SETUP.md).
+
+### Archivos importantes
+
+- `credentials.json` - Credenciales OAuth compartidas (incluidas en repo)
+- `token.json` - Tu token de acceso personal (en `.gitignore`, NUNCA compartir)
+- Ambos archivos deben estar en la raíz del proyecto
+
 ## Documentación
 
 - [Diccionario de Columnas](docs/COLUMNAS.md) - Explicación detallada de cada columna

@@ -6,20 +6,22 @@ Obtiene CER (BCRA), CCL (Ambito/dolarapi) y proyecciones REM (BCRA).
 
 import argparse
 import io
+import logging
 import os
-import warnings
 from datetime import date, datetime
 
 import openpyxl
 import requests
-import urllib3
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 
 from src.connectors.sheets import get_sheets_client
 
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-warnings.filterwarnings("ignore", message="Unverified HTTPS request")
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -57,7 +59,8 @@ MONTHS_MAP = {
 def fetch_cer(since: date, until: date) -> dict[date, float]:
     results = {}
     offset, limit = 0, 3000
-    print(f"  CER: obteniendo {since} -> {until} desde BCRA...")
+    logger.info(f"CER: fetching {since} -> {until} from BCRA...")
+
     while True:
         try:
             resp = requests.get(
@@ -68,42 +71,77 @@ def fetch_cer(since: date, until: date) -> dict[date, float]:
                     "limit": limit,
                     "offset": offset,
                 },
-                verify=False,
                 timeout=30,
             )
             resp.raise_for_status()
             body = resp.json()
+
             detalle = []
             for variable in body.get("results", []):
                 detalle.extend(variable.get("detalle", []))
+
             for record in detalle:
-                d = datetime.strptime(record["fecha"], "%Y-%m-%d").date()
-                results[d] = record["valor"]
+                if "fecha" not in record or "valor" not in record:
+                    logger.warning(f"CER: skipping malformed record: {record}")
+                    continue
+                try:
+                    d = datetime.strptime(record["fecha"], "%Y-%m-%d").date()
+                    results[d] = float(record["valor"])
+                except (ValueError, TypeError) as e:
+                    logger.warning(f"CER: invalid date or value in record {record}: {e}")
+                    continue
+
             total = body.get("metadata", {}).get("resultset", {}).get("count", 0)
             offset += len(detalle)
             if offset >= total or not detalle:
                 break
-        except Exception as e:
-            print(f"  ERROR CER: {e}")
+
+        except requests.exceptions.SSLError as e:
+            logger.error(f"CER: SSL verification failed: {e}")
+            raise
+        except requests.exceptions.RequestException as e:
+            logger.error(f"CER: request failed: {e}")
             break
-    print(f"  CER: {len(results)} registros.")
+        except (KeyError, ValueError) as e:
+            logger.error(f"CER: invalid response format: {e}")
+            break
+
+    logger.info(f"CER: fetched {len(results)} records")
     return results
 
 
 def fetch_ccl_ambito(since: date, until: date) -> dict[date, float]:
     url = AMBITO_CCL_URL.format(desde=since.isoformat(), hasta=until.isoformat())
-    print(f"  CCL: obteniendo {since} -> {until} desde Ambito...")
+    logger.info(f"CCL: fetching {since} -> {until} from Ambito...")
     out = {}
+
     try:
+        # User-Agent needed to bypass Ambito's bot detection
         resp = requests.get(url, timeout=30, headers={"User-Agent": "Mozilla/5.0"})
         resp.raise_for_status()
         data = resp.json()
+
+        if not isinstance(data, list):
+            logger.error(f"CCL Ambito: unexpected response format (not a list)")
+            return out
+
         for row in data[1:]:
-            d = datetime.strptime(str(row[0]).strip(), "%d/%m/%Y").date()
-            out[d] = float(row[1])
-    except Exception as e:
-        print(f"  WARNING CCL Ambito: {e}")
-    print(f"  CCL: {len(out)} registros.")
+            if not isinstance(row, list) or len(row) < 2:
+                logger.warning(f"CCL Ambito: skipping malformed row: {row}")
+                continue
+            try:
+                d = datetime.strptime(str(row[0]).strip(), "%d/%m/%Y").date()
+                out[d] = float(row[1])
+            except (ValueError, TypeError, IndexError) as e:
+                logger.warning(f"CCL Ambito: invalid row {row}: {e}")
+                continue
+
+    except requests.exceptions.RequestException as e:
+        logger.warning(f"CCL Ambito: request failed: {e}")
+    except (ValueError, KeyError) as e:
+        logger.error(f"CCL Ambito: invalid response format: {e}")
+
+    logger.info(f"CCL: fetched {len(out)} records from Ambito")
     return out
 
 
@@ -114,50 +152,83 @@ def fetch_ccl_today() -> tuple[date, float] | None:
         )
         resp.raise_for_status()
         body = resp.json()
+
         venta = body.get("venta")
         fecha = body.get("fechaActualizacion", "")
-        if venta and fecha:
+
+        if not venta or not fecha:
+            logger.warning("CCL today: missing venta or fecha in response")
+            return None
+
+        try:
             d = datetime.fromisoformat(fecha.replace("Z", "+00:00")).date()
             return d, float(venta)
-    except Exception:
-        pass
-    return None
+        except (ValueError, TypeError) as e:
+            logger.warning(f"CCL today: invalid date or venta format: {e}")
+            return None
+
+    except requests.exceptions.RequestException as e:
+        logger.warning(f"CCL today: request failed: {e}")
+        return None
+    except (KeyError, ValueError) as e:
+        logger.warning(f"CCL today: invalid response format: {e}")
+        return None
 
 
 def get_rem_publication_links(since_date: tuple[int, int]) -> list[dict]:
-    print(f"  REM: buscando reportes en {BCRA_TODOS_REM_URL}...")
-    r = requests.get(BCRA_TODOS_REM_URL, verify=False, timeout=30)
+    logger.info(f"REM: searching for reports at {BCRA_TODOS_REM_URL}...")
+
+    try:
+        r = requests.get(BCRA_TODOS_REM_URL, timeout=30)
+        r.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        logger.error(f"REM: failed to fetch publication list: {e}")
+        return []
+
     soup = BeautifulSoup(r.text, "html.parser")
     table = soup.find("table")
     if not table:
+        logger.warning("REM: no table found in publication page")
         return []
+
     links = []
     for row in table.find_all("tr")[1:]:
         cols = row.find_all("td")
         if len(cols) < 3:
             continue
+
         link_tag = cols[0].find("a", href=True)
         if not link_tag:
             continue
+
         period_text = cols[2].get_text(strip=True)
         try:
             m_text, y_text = period_text.split()
             period_date = (int(y_text), MONTHS_MAP[m_text.lower()])
+
             if period_date < since_date:
                 continue
+
             pub_url = link_tag["href"]
             if not pub_url.startswith("http"):
                 pub_url = BCRA_BASE_URL + pub_url
+
             links.append({"url": pub_url, "date": period_date, "period": period_text})
-        except Exception:
+
+        except (ValueError, KeyError) as e:
+            logger.warning(f"REM: failed to parse row {period_text}: {e}")
             continue
+
+    logger.info(f"REM: found {len(links)} publication links")
     return sorted(links, key=lambda x: x["date"])
 
 
 def get_xlsx_from_publication(pub_url: str) -> str | None:
     try:
-        r = requests.get(pub_url, verify=False, timeout=30)
+        r = requests.get(pub_url, timeout=30)
+        r.raise_for_status()
         soup = BeautifulSoup(r.text, "html.parser")
+
         for link in soup.find_all("a", href=True):
             text, href = link.get_text().lower(), link["href"].lower()
             if ("tablas" in text or "tablas" in href) and href.endswith(".xlsx"):
@@ -171,24 +242,52 @@ def get_xlsx_from_publication(pub_url: str) -> str | None:
                         "sitiopublico.desa.bcra.net", "www.bcra.gob.ar"
                     )
                 return xlsx_url
-    except Exception:
-        pass
+
+    except requests.exceptions.RequestException as e:
+        logger.warning(f"REM: failed to fetch publication page {pub_url}: {e}")
+    except Exception as e:
+        logger.warning(f"REM: failed to parse publication page {pub_url}: {e}")
+
     return None
 
 
 def download_and_parse_rem(url: str) -> list[float]:
     try:
-        r = requests.get(url, verify=False, timeout=30)
+        r = requests.get(url, timeout=30)
+        r.raise_for_status()
+
         wb = openpyxl.load_workbook(io.BytesIO(r.content), data_only=True)
         sheet = wb.worksheets[0]
+
         projections = []
         for row in range(7, 14):  # M a M+6
             val = sheet.cell(row=row, column=4).value
-            projections.append(float(val) / 100.0 if val is not None else 0.0)
+            if val is not None:
+                try:
+                    projections.append(float(val) / 100.0)
+                except (ValueError, TypeError) as e:
+                    logger.warning(f"REM: invalid projection value at row {row}: {val} ({e})")
+                    projections.append(0.0)
+            else:
+                projections.append(0.0)
+
         val_12m = sheet.cell(row=14, column=4).value
-        projections.append(float(val_12m) / 100.0 if val_12m is not None else 0.0)
+        if val_12m is not None:
+            try:
+                projections.append(float(val_12m) / 100.0)
+            except (ValueError, TypeError) as e:
+                logger.warning(f"REM: invalid 12m projection: {val_12m} ({e})")
+                projections.append(0.0)
+        else:
+            projections.append(0.0)
+
         return projections
-    except Exception:
+
+    except requests.exceptions.RequestException as e:
+        logger.error(f"REM: failed to download XLSX from {url}: {e}")
+        return []
+    except Exception as e:
+        logger.error(f"REM: failed to parse XLSX from {url}: {e}")
         return []
 
 
@@ -210,9 +309,12 @@ def get_last_date_from_sheet() -> date:
                     continue
 
         if dates:
-            return max(dates)
-    except Exception:
-        pass
+            last_date = max(dates)
+            logger.info(f"Last date in sheet: {last_date}")
+            return last_date
+
+    except Exception as e:
+        logger.warning(f"Failed to get last date from sheet: {e}, using default {BACKFILL_FROM}")
 
     return BACKFILL_FROM
 
@@ -222,7 +324,7 @@ def update_sheets(cer_data, ccl_data, rem_reports):
     ss = client.open_by_key(SPREADSHEET_ID)
 
     if cer_data or ccl_data:
-        print(f"  Actualizando {HISTORIC_SHEET}...")
+        logger.info(f"Updating {HISTORIC_SHEET}...")
         ws_h = ss.worksheet(HISTORIC_SHEET)
 
         existing_rows = ws_h.get_all_values()[FIRST_DATA_ROW - 1 :]
@@ -257,28 +359,28 @@ def update_sheets(cer_data, ccl_data, rem_reports):
             value_input_option="USER_ENTERED",
         )
 
-        if rem_reports:
-            print(f"  Actualizando {REM_SHEET}...")
-            ws_r = ss.worksheet(REM_SHEET)
+    if rem_reports:
+        logger.info(f"Updating {REM_SHEET}...")
+        ws_r = ss.worksheet(REM_SHEET)
 
-            existing_rem = ws_r.get_all_values()[3:]
-            rem_map = {}
-            for row in existing_rem:
-                if len(row) >= 1 and row[0]:
-                    rem_map[row[0]] = row[1:9]
+        existing_rem = ws_r.get_all_values()[3:]
+        rem_map = {}
+        for row in existing_rem:
+            if len(row) >= 1 and row[0]:
+                rem_map[row[0]] = row[1:9]
 
-            for m, projs in rem_reports.items():
-                rem_map[m] = projs
+        for m, projs in rem_reports.items():
+            rem_map[m] = projs
 
-            sorted_months = sorted(rem_map.keys())
-            payload = [[m] + rem_map[m] for m in sorted_months]
+        sorted_months = sorted(rem_map.keys())
+        payload = [[m] + rem_map[m] for m in sorted_months]
 
-            ws_r.batch_clear(["A4:I500"])
-            ws_r.update(
-                range_name=f"A4:I{4 + len(payload) - 1}",
-                values=payload,
-                value_input_option="USER_ENTERED",
-            )
+        ws_r.batch_clear(["A4:I500"])
+        ws_r.update(
+            range_name=f"A4:I{4 + len(payload) - 1}",
+            values=payload,
+            value_input_option="USER_ENTERED",
+        )
 
 
 def main():
@@ -294,15 +396,28 @@ def main():
     )
     args = parser.parse_args()
 
+    # Validación de input
     if args.since:
-        since_dt = datetime.strptime(args.since, "%Y-%m-%d").date()
+        try:
+            since_dt = datetime.strptime(args.since, "%Y-%m-%d").date()
+        except ValueError:
+            logger.error(f"Invalid date format: {args.since}. Use YYYY-MM-DD")
+            return
+
+        # Validar rango de fechas razonable
+        if since_dt > date.today():
+            logger.error("Start date cannot be in the future")
+            return
+        if since_dt < date(2000, 1, 1):
+            logger.error("Start date seems unreasonably old (before 2000)")
+            return
     else:
-        print("  Buscando última fecha actualizada en el sheet...")
+        logger.info("Searching for last updated date in sheet...")
         since_dt = get_last_date_from_sheet()
 
     until_dt = date.today()
 
-    print(f"--- Actualizando dataset desde {since_dt} hasta {until_dt} ---")
+    logger.info(f"=== Updating dataset from {since_dt} to {until_dt} ===")
 
     cer = fetch_cer(since_dt, until_dt)
     ccl = fetch_ccl_ambito(since_dt, until_dt)
@@ -313,7 +428,7 @@ def main():
     rem_links = get_rem_publication_links((since_dt.year, since_dt.month))
     rem_reports = {}
     for pub in rem_links:
-        print(f"  REM: procesando {pub['period']}...")
+        logger.info(f"REM: processing {pub['period']}...")
         xlsx = get_xlsx_from_publication(pub["url"])
         if xlsx:
             projs = download_and_parse_rem(xlsx)
@@ -321,7 +436,7 @@ def main():
                 rem_reports[f"{pub['date'][0]}-{pub['date'][1]:02d}-01"] = projs
 
     update_sheets(cer, ccl, rem_reports)
-    print("\nDatos actualizados correctamente.")
+    logger.info("Dataset updated successfully")
 
 
 if __name__ == "__main__":

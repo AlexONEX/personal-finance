@@ -1,5 +1,7 @@
 """Google Sheets connector con soporte para OAuth y Service Account."""
 
+import logging
+import os
 from pathlib import Path
 
 import gspread
@@ -7,6 +9,8 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials as OAuthCredentials
 from google.oauth2.service_account import Credentials as ServiceAccountCredentials
 from google_auth_oauthlib.flow import InstalledAppFlow
+
+logger = logging.getLogger(__name__)
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 OAUTH_CREDENTIALS_FILE = "credentials.json"
@@ -58,9 +62,13 @@ def _get_oauth_client() -> gspread.Client:
             )
             creds = flow.run_local_server(port=0)
 
-        # Save token for future runs
-        Path(OAUTH_TOKEN_FILE).write_text(creds.to_json())
-        print(f"Token saved to {OAUTH_TOKEN_FILE}")
+        # Save token for future runs with restrictive permissions
+        token_path = Path(OAUTH_TOKEN_FILE)
+        token_path.write_text(creds.to_json())
+
+        # Set restrictive permissions (owner read/write only, 0o600)
+        os.chmod(token_path, 0o600)
+        logger.info(f"Token saved to {OAUTH_TOKEN_FILE} with restrictive permissions")
 
     return gspread.authorize(creds)
 
