@@ -88,14 +88,18 @@ El spreadsheet tiene 5 hojas:
 
 Este proyecto incluye `credentials.json` (credenciales OAuth) en el repositorio para simplificar el setup. Esto es **seguro para aplicaciones desktop** porque:
 
-1. **OAuth para Desktop Apps (RFC 8252)**: Google específicamente indica que para aplicaciones nativas/desktop, el `client_secret` **no puede mantenerse confidencial** y es esperado que esté embebido en la app.
+1. **Google lo permite explícitamente**: Según la [documentación oficial de Google](https://developers.google.com/identity/protocols/oauth2#installed), para aplicaciones instaladas/desktop el `client_secret` **no se considera confidencial**:
+   > "The client secret is not treated as a secret for installed applications and native applications, because there is no way to guarantee the client secret will remain confidential."
 
-2. **La seguridad real viene de**:
+2. **RFC 8252 (OAuth 2.0 for Native Apps)**: El estándar oficial confirma que aplicaciones nativas **no pueden mantener secretos** de forma segura:
+   > "This best current practice requires that only external user-agents like the browser are used for OAuth by native apps. It documents how native apps can implement authorization flows using the browser."
+
+3. **La seguridad real viene de**:
    - Cada usuario autoriza **su propia cuenta** mediante el flujo OAuth en el navegador
    - El `token.json` (que SÍ es secreto y contiene acceso a tu cuenta) está en `.gitignore` y nunca se comparte
    - Los permisos se limitan solo a Google Sheets (scope específico)
 
-3. **Riesgos reales** (bajos):
+4. **Riesgos reales** (bajos):
    - Alguien podría spamear requests y Google revoca las credenciales compartidas → solución: regenerar
    - **NO hay riesgo** de acceso a cuentas de usuarios (cada uno autoriza la suya)
 
