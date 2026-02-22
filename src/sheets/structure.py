@@ -244,4 +244,5 @@ HISTORIC_VARIABLES = [
     (None, "Fecha", None),
     (30, "CER", "CER"),
     ("IOL/dolarapi", "CCL", "CCL"),
+    ("yfinance", "SPY", "SPY"),
 ]

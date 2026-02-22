@@ -135,11 +135,11 @@ def create_formulas(row_num: int) -> list:
         # T: Rendimiento % Acumulado USD
         f'=IF(S{r}="-", "-", IF({is_first_row}, S{r}, (1+T{prev_r})*(1+S{r})-1))',
 
-        # U: SPY Inicio Mes (primer día del mes) - Column D in historic_data when added
-        f'="-"',  # Placeholder until SPY data is added to historic_data
+        # U: SPY Inicio Mes (primer día del mes) - Column D in historic_data
+        f'=IFERROR(VLOOKUP(A{r}, historic_data!$A$4:$D, 4, TRUE), "-")',
 
         # V: SPY Fin Mes (último día del mes)
-        f'="-"',  # Placeholder until SPY data is added to historic_data
+        f'=IFERROR(VLOOKUP({ultimo_dia_formula}, historic_data!$A$4:$D, 4, TRUE), "-")',
 
         # W: Δ% SPY MoM
         f'=IF(OR(U{r}="-", V{r}="-"), "-", (V{r}/U{r})-1)',
@@ -288,8 +288,7 @@ def main():
     print("- Row 2: Headers de columnas")
     print("- Row 3+: Datos")
     print("\nColumnas A-I: Datos raw de IEB (mes, ingresos, egresos, valores)")
-    print("Columnas J-AC: Fórmulas calculadas (ganancias, rendimientos ARS/USD, CCL)")
-    print("\n⚠️  SPY lookups pendientes - agregar SPY a historic_data")
+    print("Columnas J-AC: Fórmulas calculadas (ganancias, rendimientos ARS/USD vs CER/SPY, CCL)")
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 """fetch_data.py
 
 Script unificado para la obtención de datos del Ingresos Tracker.
-Obtiene CER (BCRA), CCL (Ambito/dolarapi) y proyecciones REM (BCRA).
+Obtiene CER (BCRA), CCL (Ambito/dolarapi), SPY (yfinance) y proyecciones REM (BCRA).
 """
 
 import argparse
@@ -14,6 +14,7 @@ from datetime import date, datetime
 import openpyxl
 import requests
 import urllib3
+import yfinance as yf
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 
@@ -192,6 +193,37 @@ def fetch_ccl_today() -> tuple[date, float] | None:
     except (KeyError, ValueError) as e:
         logger.warning(f"CCL today: invalid response format: {e}")
         return None
+
+
+def fetch_spy(since: date, until: date) -> dict[date, float]:
+    """
+    Obtiene precios históricos de cierre de SPY usando yfinance.
+
+    Returns:
+        dict[date, float]: Mapa de fecha -> precio de cierre
+    """
+    out = {}
+
+    try:
+        # Descargar datos diarios de SPY
+        ticker = yf.Ticker("SPY")
+        df = ticker.history(start=since, end=until, interval="1d")
+
+        if df.empty:
+            logger.warning(f"SPY: no data returned for {since} to {until}")
+            return out
+
+        # Convertir a dict[date, float] usando el precio de cierre
+        for idx, row in df.iterrows():
+            d = idx.date() if hasattr(idx, 'date') else idx
+            out[d] = float(row['Close'])
+
+        logger.info(f"SPY: fetched {len(out)} days from {since} to {until}")
+
+    except Exception as e:
+        logger.error(f"SPY: failed to fetch data: {e}")
+
+    return out
 
 
 def get_rem_publication_links(since_date: tuple[int, int]) -> list[dict]:
@@ -382,11 +414,11 @@ def get_last_rem_date_from_sheet() -> tuple[int, int]:
     return (BACKFILL_FROM.year, BACKFILL_FROM.month)
 
 
-def update_sheets(cer_data, ccl_data, rem_reports):
+def update_sheets(cer_data, ccl_data, spy_data, rem_reports):
     client = get_sheets_client()
     ss = client.open_by_key(SPREADSHEET_ID)
 
-    if cer_data or ccl_data:
+    if cer_data or ccl_data or spy_data:
         ws_h = ss.worksheet(HISTORIC_SHEET)
 
         existing_rows = ws_h.get_all_values()[FIRST_DATA_ROW - 1 :]
@@ -396,27 +428,34 @@ def update_sheets(cer_data, ccl_data, rem_reports):
                 data_map[row[0]] = [
                     row[1] if len(row) > 1 else "",
                     row[2] if len(row) > 2 else "",
+                    row[3] if len(row) > 3 else "",
                 ]
 
         for d, val in cer_data.items():
             fmt_d = d.strftime("%d/%m/%Y")
             if fmt_d not in data_map:
-                data_map[fmt_d] = ["", ""]
+                data_map[fmt_d] = ["", "", ""]
             data_map[fmt_d][0] = val
 
         for d, val in ccl_data.items():
             fmt_d = d.strftime("%d/%m/%Y")
             if fmt_d not in data_map:
-                data_map[fmt_d] = ["", ""]
+                data_map[fmt_d] = ["", "", ""]
             data_map[fmt_d][1] = val
+
+        for d, val in spy_data.items():
+            fmt_d = d.strftime("%d/%m/%Y")
+            if fmt_d not in data_map:
+                data_map[fmt_d] = ["", "", ""]
+            data_map[fmt_d][2] = val
 
         sorted_dates = sorted(
             data_map.keys(), key=lambda x: datetime.strptime(x, "%d/%m/%Y")
         )
-        payload = [[d, data_map[d][0], data_map[d][1]] for d in sorted_dates]
+        payload = [[d, data_map[d][0], data_map[d][1], data_map[d][2]] for d in sorted_dates]
 
         ws_h.update(
-            range_name=f"A{FIRST_DATA_ROW}:C{FIRST_DATA_ROW + len(payload) - 1}",
+            range_name=f"A{FIRST_DATA_ROW}:D{FIRST_DATA_ROW + len(payload) - 1}",
             values=payload,
             value_input_option="USER_ENTERED",
         )
@@ -493,16 +532,18 @@ def main():
     print(f"Updating dataset from {since_dt} to {until_dt}...")
 
     # Paralelizar fetch de datos
-    with ThreadPoolExecutor(max_workers=4) as executor:
-        # Lanzar CER, CCL Ambito, CCL today en paralelo
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        # Lanzar CER, CCL Ambito, CCL today, SPY en paralelo
         future_cer = executor.submit(fetch_cer, since_dt, until_dt)
         future_ccl = executor.submit(fetch_ccl_ambito, since_dt, until_dt)
         future_today = executor.submit(fetch_ccl_today)
+        future_spy = executor.submit(fetch_spy, since_dt, until_dt)
 
         # Esperar resultados
         cer = future_cer.result()
         ccl = future_ccl.result()
         today = future_today.result()
+        spy = future_spy.result()
 
         if today and today[0] >= since_dt:
             ccl[today[0]] = today[1]
@@ -531,7 +572,7 @@ def main():
                 month_key, projs = result
                 rem_reports[month_key] = projs
 
-    update_sheets(cer, ccl, rem_reports)
+    update_sheets(cer, ccl, spy, rem_reports)
     print("Dataset updated successfully")
 
 

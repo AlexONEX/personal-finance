@@ -119,8 +119,8 @@ def setup_historic(ss: gspread.Spreadsheet):
     ws = get_or_create_worksheet(ss, HISTORIC_SHEET, rows=2000, cols=5)
     meta = [f"Source: {v[0]}" if v[0] else "" for v in HISTORIC_VARIABLES]
     headers = [v[1] for v in HISTORIC_VARIABLES]
-    ws.update(range_name="A1:C1", values=[meta])
-    ws.update(range_name="A2:C2", values=[headers])
+    ws.update(range_name="A1:D1", values=[meta])
+    ws.update(range_name="A2:D2", values=[headers])
 
     reqs = [
         {
