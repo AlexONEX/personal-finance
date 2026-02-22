@@ -10,8 +10,8 @@ INCOME_GROUPS = [
     ("M", "P", "INFLACIÓN (CER)"),
     ("Q", "V", "COMPARACION CON ULTIMO AUMENTO ARS"),
     ("W", "AB", "PROYECCION REM"),
-    ("AC", "AG", "DÓLAR"),
-    ("AH", "AM", "VS ÚLTIMO AUMENTO USD"),
+    ("AC", "AF", "DÓLAR"),
+    ("AG", "AL", "VS ÚLTIMO AUMENTO USD"),
 ]
 
 INCOME_COLUMNS = [
@@ -121,38 +121,33 @@ INCOME_COLUMNS = [
     ("AF", "Sueldo USD Neto", '=IF(OR(F{r}="-", AC{r}="-"), "-", IFERROR(F{r}/AC{r},"-"))'),
     (
         "AG",
-        "Poder Adq. MoM (USD)",
-        '=IF(OR(AF{r}="-", AF{r-1}="-"), "-", IFERROR((AF{r}/AF{r-1})-1, "-"))',
+        "CCL Base",
+        '=IF(OR(ISBLANK(B{r}), B{r}=0), "-", IF(OR(ROW(B{r})=3, B{r}<>B{r-1}), AC{r}, AG{r-1}))',
     ),
     (
         "AH",
-        "CCL Base",
-        '=IF(OR(ISBLANK(B{r}), B{r}=0), "-", IF(OR(ROW(B{r})=3, B{r}<>B{r-1}), AC{r}, AH{r-1}))',
+        "Sueldo USD Bruto Base",
+        '=IF(OR(ISBLANK(B{r}), B{r}=0), "-", IF(OR(ROW(B{r})=3, B{r}<>B{r-1}), AE{r}, AH{r-1}))',
     ),
     (
         "AI",
-        "Sueldo USD Bruto Base",
-        '=IF(OR(ISBLANK(B{r}), B{r}=0), "-", IF(OR(ROW(B{r})=3, B{r}<>B{r-1}), AE{r}, AI{r-1}))',
+        "Sueldo USD Neto Base",
+        '=IF(OR(ISBLANK(B{r}), B{r}=0), "-", IF(OR(ROW(B{r})=3, B{r}<>B{r-1}), AF{r}, AI{r-1}))',
     ),
     (
         "AJ",
-        "Sueldo USD Neto Base",
-        '=IF(OR(ISBLANK(B{r}), B{r}=0), "-", IF(OR(ROW(B{r})=3, B{r}<>B{r-1}), AF{r}, AJ{r-1}))',
+        "Paridad USD (Bruto)",
+        '=IF(OR(Q{r}="-", AC{r}="-", AG{r}="-"), "-", IFERROR(Q{r} * (AC{r}/AG{r}), "-"))',
     ),
     (
         "AK",
-        "Paridad USD (Bruto)",
-        '=IF(OR(Q{r}="-", AC{r}="-", AH{r}="-"), "-", IFERROR(Q{r} * (AC{r}/AH{r}), "-"))',
+        "Paridad USD (Neto)",
+        '=IF(OR(R{r}="-", AC{r}="-", AG{r}="-"), "-", IFERROR(R{r} * (AC{r}/AG{r}), "-"))',
     ),
     (
         "AL",
-        "Paridad USD (Neto)",
-        '=IF(OR(R{r}="-", AC{r}="-", AH{r}="-"), "-", IFERROR(R{r} * (AC{r}/AH{r}), "-"))',
-    ),
-    (
-        "AM",
         "Atraso USD",
-        '=IF(OR(AF{r}="-", AJ{r}="-"), "-", IFERROR((AF{r}/AJ{r})-1, "-"))',
+        '=IF(OR(AF{r}="-", AI{r}="-"), "-", IFERROR((AF{r}/AI{r})-1, "-"))',
     ),
 ]
 
@@ -189,13 +184,12 @@ COLUMN_FORMATS = {
     "AD": {"type": "PERCENT", "pattern": "0.00%"},
     "AE": {"type": "NUMBER", "pattern": "#,##0.00"},
     "AF": {"type": "NUMBER", "pattern": "#,##0.00"},
-    "AG": {"type": "PERCENT", "pattern": "0.00%"},
-    "AH": {"type": "CURRENCY", "pattern": "$#,##0.00"},
+    "AG": {"type": "CURRENCY", "pattern": "$#,##0.00"},
+    "AH": {"type": "NUMBER", "pattern": "#,##0.00"},
     "AI": {"type": "NUMBER", "pattern": "#,##0.00"},
-    "AJ": {"type": "NUMBER", "pattern": "#,##0.00"},
+    "AJ": {"type": "CURRENCY", "pattern": "$#,##0"},
     "AK": {"type": "CURRENCY", "pattern": "$#,##0"},
-    "AL": {"type": "CURRENCY", "pattern": "$#,##0"},
-    "AM": {"type": "PERCENT", "pattern": "0.00%"},
+    "AL": {"type": "PERCENT", "pattern": "0.00%"},
 }
 
 COLUMN_DESCRIPTIONS = {
@@ -231,13 +225,12 @@ COLUMN_DESCRIPTIONS = {
     "AD": "Variación % CCL MoM",
     "AE": "Sueldo Bruto en USD CCL",
     "AF": "Sueldo Neto en USD CCL",
-    "AG": "Poder adquisitivo ganado/perdido en USD MoM",
-    "AH": "CCL al momento del último aumento",
-    "AI": "Sueldo Bruto USD al momento del último aumento",
-    "AJ": "Sueldo Neto USD al momento del último aumento",
-    "AK": "Sueldo en ARS para recuperar Bruto USD del aumento",
-    "AL": "Sueldo en ARS para recuperar Neto USD del aumento",
-    "AM": "Atraso real en USD vs último aumento",
+    "AG": "CCL al momento del último aumento",
+    "AH": "Sueldo Bruto USD al momento del último aumento",
+    "AI": "Sueldo Neto USD al momento del último aumento",
+    "AJ": "Sueldo en ARS para recuperar Bruto USD del aumento",
+    "AK": "Sueldo en ARS para recuperar Neto USD del aumento",
+    "AL": "Atraso real en USD vs último aumento",
 }
 
 IMPUESTOS_ROWS = [

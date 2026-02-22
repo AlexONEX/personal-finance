@@ -48,13 +48,12 @@ Este documento describe todas las columnas de la hoja de cálculo "Ingresos".
 *   **AD - Δ % CCL MoM**: Variación mensual del dólar.
 *   **AE - Sueldo USD Bruto**: Sueldo bruto en dólares CCL.
 *   **AF - Sueldo USD Neto**: Sueldo neto en dólares CCL.
-*   **AG - Poder Adq. MoM (USD)**: Variación del sueldo en dólares respecto al mes anterior.
 
 ## 6. VS ULTIMO AUMENTO USD
 
-*   **AH - CCL Base**: CCL al momento del último aumento.
-*   **AI - Sueldo USD Bruto Base**: Sueldo bruto USD al momento del aumento.
-*   **AJ - Sueldo USD Neto Base**: Sueldo neto USD al momento del aumento.
-*   **AK - Paridad USD (Bruto)**: Sueldo en ARS para recuperar Bruto USD del aumento.
-*   **AL - Paridad USD (Neto)**: Sueldo en ARS para recuperar Neto USD del aumento.
-*   **AM - Atraso USD**: Variación real en USD respecto al último aumento.
+*   **AG - CCL Base**: CCL al momento del último aumento.
+*   **AH - Sueldo USD Bruto Base**: Sueldo bruto USD al momento del aumento.
+*   **AI - Sueldo USD Neto Base**: Sueldo neto USD al momento del aumento.
+*   **AJ - Paridad USD (Bruto)**: Sueldo en ARS para recuperar Bruto USD del aumento.
+*   **AK - Paridad USD (Neto)**: Sueldo en ARS para recuperar Neto USD del aumento.
+*   **AL - Atraso USD**: Variación real en USD respecto al último aumento.
