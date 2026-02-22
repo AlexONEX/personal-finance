@@ -31,18 +31,17 @@ def load_portfolio_data(csv_file: str) -> list[dict]:
 
 def prepare_raw_data(portfolio_data: list[dict]) -> list[list]:
     """
-    Prepara solo los datos RAW para subir (columnas A-J).
+    Prepara solo los datos RAW para subir (columnas A-I).
 
     A: Mes (formato dd/mm/yyyy - primer día del mes)
     B: Ingreso ARS
     C: Egreso ARS
     D: Valor Inicio ARS
     E: Valor Fin ARS
-    F: Ganancia/Pérdida ARS
-    G: Ingreso USD
-    H: Egreso USD
+    F: Ingreso USD
+    G: Egreso USD
+    H: Valor Inicio USD
     I: Valor Fin USD
-    J: Ganancia/Pérdida USD
     """
     rows = []
 
@@ -59,11 +58,10 @@ def prepare_raw_data(portfolio_data: list[dict]) -> list[list]:
             float(data["Egresos ARS"]),         # C
             float(data["Inicio ARS"]),          # D
             float(data["Fin ARS"]),             # E
-            float(data["Ganancia ARS"]),        # F
-            float(data["Ingresos USD"]),        # G
-            float(data["Egresos USD"]),         # H
+            float(data["Ingresos USD"]),        # F
+            float(data["Egresos USD"]),         # G
+            float(data["Inicio USD"]),          # H
             float(data["Fin USD"]),             # I
-            float(data["Ganancia USD"]),        # J
         ])
 
     return rows
@@ -71,22 +69,24 @@ def prepare_raw_data(portfolio_data: list[dict]) -> list[list]:
 
 def create_formulas(row_num: int) -> list:
     """
-    Crea fórmulas para columnas K-X de una fila.
+    Crea fórmulas para columnas J-Y de una fila.
 
-    K: CCL Fin Mes (último CCL del mes)
-    L: Valor Fin USD*CCL
-    M: Rendimiento % MoM
-    N: Rendimiento % Acumulado
-    O: CER Inicio Mes
-    P: CER Fin Mes
-    Q: Δ% CER MoM
-    R: Rendimiento MoM vs CER
-    S: Rendimiento Acumulado vs CER
-    T: CCL Inicio Mes
-    U: CCL Fin Mes
-    V: Δ% CCL MoM
-    W: Rendimiento MoM vs CCL
-    X: Rendimiento Acumulado vs CCL
+    J: Ganancia/Pérdida ARS
+    K: Ganancia/Pérdida USD
+    L: CCL Fin Mes (último CCL del mes)
+    M: Valor Fin USD*CCL
+    N: Rendimiento % MoM
+    O: Rendimiento % Acumulado
+    P: CER Inicio Mes
+    Q: CER Fin Mes
+    R: Δ% CER MoM
+    S: Rendimiento MoM vs CER
+    T: Rendimiento Acumulado vs CER
+    U: CCL Inicio Mes
+    V: CCL Fin Mes
+    W: Δ% CCL MoM
+    X: Rendimiento MoM vs CCL
+    Y: Rendimiento Acumulado vs CCL
     """
     r = row_num
     prev_r = row_num - 1
@@ -95,47 +95,53 @@ def create_formulas(row_num: int) -> list:
     ultimo_dia_formula = f'DATE(YEAR(A{r}), MONTH(A{r}), DAY(EOMONTH(A{r}, 0)))'
 
     formulas = [
-        # K: CCL Fin Mes
+        # J: Ganancia ARS = Fin - Inicio - Ingresos + Egresos
+        f'=E{r}-D{r}-B{r}+C{r}',
+
+        # K: Ganancia USD = Fin - Inicio - Ingresos + Egresos
+        f'=I{r}-H{r}-F{r}+G{r}',
+
+        # L: CCL Fin Mes
         f'=IFERROR(INDEX(FILTER(historic_data!$C$4:$C, historic_data!$C$4:$C <> ""), MATCH({ultimo_dia_formula}, FILTER(historic_data!$A$4:$A, historic_data!$C$4:$C <> ""), 1)), "-")',
 
-        # L: Valor Fin USD * CCL
-        f'=IF(K{r}="-", "-", I{r}*K{r})',
+        # M: Valor Fin USD * CCL
+        f'=IF(L{r}="-", "-", I{r}*L{r})',
 
-        # M: Rendimiento % MoM = (Fin - Inicio - Ingresos + Egresos) / (Inicio + Ingresos - Egresos)
+        # N: Rendimiento % MoM = (Fin - Inicio - Ingresos + Egresos) / (Inicio + Ingresos - Egresos)
         f'=IF(D{r}=0, "-", (E{r}-D{r}-B{r}+C{r})/(D{r}+B{r}-C{r}))',
 
-        # N: Rendimiento % Acumulado
-        f'=IF(M{r}="-", "-", IF(ROW(A{r})=2, M{r}, (1+N{prev_r})*(1+M{r})-1))',
+        # O: Rendimiento % Acumulado
+        f'=IF(N{r}="-", "-", IF(ROW(A{r})=2, N{r}, (1+O{prev_r})*(1+N{r})-1))',
 
-        # O: CER Inicio Mes (primer día del mes)
+        # P: CER Inicio Mes (primer día del mes)
         f'=IFERROR(VLOOKUP(A{r}, historic_data!$A$4:$B, 2, TRUE), "-")',
 
-        # P: CER Fin Mes (último día del mes)
+        # Q: CER Fin Mes (último día del mes)
         f'=IFERROR(VLOOKUP({ultimo_dia_formula}, historic_data!$A$4:$B, 2, TRUE), "-")',
 
-        # Q: Δ% CER MoM
-        f'=IF(OR(O{r}="-", P{r}="-"), "-", (P{r}/O{r})-1)',
+        # R: Δ% CER MoM
+        f'=IF(OR(P{r}="-", Q{r}="-"), "-", (Q{r}/P{r})-1)',
 
-        # R: Rendimiento MoM vs CER
-        f'=IF(OR(M{r}="-", Q{r}="-"), "-", M{r}-Q{r})',
+        # S: Rendimiento MoM vs CER
+        f'=IF(OR(N{r}="-", R{r}="-"), "-", N{r}-R{r})',
 
-        # S: Rendimiento Acumulado vs CER
-        f'=IF(OR(N{r}="-", Q{r}="-"), "-", IF(ROW(A{r})=2, R{r}, (1+S{prev_r})*(1+R{r})-1))',
+        # T: Rendimiento Acumulado vs CER
+        f'=IF(OR(O{r}="-", R{r}="-"), "-", IF(ROW(A{r})=2, S{r}, (1+T{prev_r})*(1+S{r})-1))',
 
-        # T: CCL Inicio Mes
+        # U: CCL Inicio Mes
         f'=IFERROR(INDEX(FILTER(historic_data!$C$4:$C, historic_data!$C$4:$C <> ""), MATCH(A{r}, FILTER(historic_data!$A$4:$A, historic_data!$C$4:$C <> ""), 1)), "-")',
 
-        # U: CCL Fin Mes
-        f'=K{r}',
+        # V: CCL Fin Mes
+        f'=L{r}',
 
-        # V: Δ% CCL MoM
-        f'=IF(OR(T{r}="-", U{r}="-"), "-", (U{r}/T{r})-1)',
+        # W: Δ% CCL MoM
+        f'=IF(OR(U{r}="-", V{r}="-"), "-", (V{r}/U{r})-1)',
 
-        # W: Rendimiento MoM vs CCL
-        f'=IF(OR(M{r}="-", V{r}="-"), "-", M{r}-V{r})',
+        # X: Rendimiento MoM vs CCL
+        f'=IF(OR(N{r}="-", W{r}="-"), "-", N{r}-W{r})',
 
-        # X: Rendimiento Acumulado vs CCL
-        f'=IF(OR(N{r}="-", V{r}="-"), "-", IF(ROW(A{r})=2, W{r}, (1+X{prev_r})*(1+W{r})-1))',
+        # Y: Rendimiento Acumulado vs CCL
+        f'=IF(OR(O{r}="-", W{r}="-"), "-", IF(ROW(A{r})=2, X{r}, (1+Y{prev_r})*(1+X{r})-1))',
     ]
 
     return formulas
@@ -153,10 +159,11 @@ def upload_to_sheet(client, data_rows: list[list]):
         "Egreso ARS",
         "Valor Inicio ARS",
         "Valor Fin ARS",
-        "Ganancia/Pérdida ARS",
         "Ingreso USD",
         "Egreso USD",
+        "Valor Inicio USD",
         "Valor Fin USD",
+        "Ganancia/Pérdida ARS",
         "Ganancia/Pérdida USD",
         "CCL Fin Mes",
         "Valor Fin USD*CCL",
@@ -177,31 +184,29 @@ def upload_to_sheet(client, data_rows: list[list]):
     # Clear existing data
     print(f"Clearing existing data in {INVERSIONES_SHEET}...")
     last_row = len(data_rows) + 10
-    ws.batch_clear([f"A1:X{last_row}"])
+    ws.batch_clear([f"A1:Y{last_row}"])
 
     # Upload headers
     print(f"Uploading headers...")
-    ws.update(range_name="A1:X1", values=[headers])
+    ws.update(range_name="A1:Y1", values=[headers])
 
-    # Upload RAW data (A-J)
-    print(f"Uploading {len(data_rows)} rows of raw data (columns A-J)...")
+    # Upload RAW data (A-I)
+    print(f"Uploading {len(data_rows)} rows of raw data (columns A-I)...")
     ws.update(
-        range_name=f"A2:J{len(data_rows) + 1}",
+        range_name=f"A2:I{len(data_rows) + 1}",
         values=data_rows,
         value_input_option="USER_ENTERED",
     )
 
-    # Upload formulas (K-X)
-    print(f"Uploading formulas (columns K-X)...")
+    # Upload formulas (J-Y)
+    print(f"Uploading formulas (columns J-Y)...")
     formula_updates = []
 
-    for i, row in enumerate(data_rows, start=2):  # Start at row 2
+    for i in range(2, len(data_rows) + 2):  # Start at row 2
         formulas = create_formulas(i)
-        formula_row = [[f] for f in formulas]  # Convert to column format
-
         # Batch update for this row
         formula_updates.append({
-            "range": f"K{i}:X{i}",
+            "range": f"J{i}:Y{i}",
             "values": [formulas]
         })
 
@@ -225,7 +230,7 @@ def main():
     print(f"   Loaded {len(portfolio_data)} months")
 
     # Prepare raw data
-    print(f"\n2. Preparing raw data (columns A-J)...")
+    print(f"\n2. Preparing raw data (columns A-I)...")
     data_rows = prepare_raw_data(portfolio_data)
     print(f"   Prepared {len(data_rows)} rows")
 
@@ -237,8 +242,8 @@ def main():
     print("\n" + "=" * 60)
     print("Done!")
     print("=" * 60)
-    print("\nColumnas A-J: Datos de IEB")
-    print("Columnas K-X: Fórmulas que buscan en historic_data")
+    print("\nColumnas A-I: Datos raw de IEB (mes, ingresos, egresos, valores)")
+    print("Columnas J-Y: Fórmulas calculadas (ganancias, CCL, CER, rendimientos)")
 
 
 if __name__ == "__main__":

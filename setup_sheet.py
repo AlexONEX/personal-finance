@@ -375,17 +375,19 @@ def setup_inversiones(ss: gspread.Spreadsheet):
 
     # Grupos de columnas para formato
     inversiones_groups = [
-        ("A", "F", "ARS"),           # Mes + datos ARS
-        ("G", "J", "USD"),           # Datos USD
-        ("K", "N", "VALOR USD"),     # CCL + Valor USD*CCL + Rendimientos
-        ("O", "S", "VS CER"),        # CER + comparación
-        ("T", "X", "VS CCL"),        # CCL + comparación
+        ("A", "E", "ARS"),           # Mes + datos ARS
+        ("F", "I", "USD"),           # Datos USD
+        ("J", "K", "GANANCIAS"),     # Ganancias calculadas
+        ("L", "O", "VALOR USD"),     # CCL + Valor USD*CCL + Rendimientos
+        ("P", "T", "VS CER"),        # CER + comparación
+        ("U", "Y", "VS CCL"),        # CCL + comparación
     ]
 
     # Colores para los grupos
     group_colors = {
         "ARS": {"red": 0.8, "green": 0.898, "blue": 1.0},
         "USD": {"red": 0.8, "green": 0.898, "blue": 0.898},
+        "GANANCIAS": {"red": 1.0, "green": 1.0, "blue": 0.8},
         "VALOR USD": {"red": 0.898, "green": 1.0, "blue": 0.898},
         "VS CER": {"red": 1.0, "green": 0.8, "blue": 0.8},
         "VS CCL": {"red": 0.988, "green": 0.898, "blue": 0.804},
@@ -399,30 +401,32 @@ def setup_inversiones(ss: gspread.Spreadsheet):
         "C": {"type": "NUMBER", "pattern": "#,##0.00"},
         "D": {"type": "NUMBER", "pattern": "#,##0.00"},
         "E": {"type": "NUMBER", "pattern": "#,##0.00"},
-        "F": {"type": "NUMBER", "pattern": "#,##0.00"},
         # USD columns - numbers with decimals
+        "F": {"type": "NUMBER", "pattern": "#,##0.00"},
         "G": {"type": "NUMBER", "pattern": "#,##0.00"},
         "H": {"type": "NUMBER", "pattern": "#,##0.00"},
         "I": {"type": "NUMBER", "pattern": "#,##0.00"},
+        # Ganancias
         "J": {"type": "NUMBER", "pattern": "#,##0.00"},
-        # CCL + USD*CCL
         "K": {"type": "NUMBER", "pattern": "#,##0.00"},
+        # CCL + USD*CCL
         "L": {"type": "NUMBER", "pattern": "#,##0.00"},
+        "M": {"type": "NUMBER", "pattern": "#,##0.00"},
         # Rendimientos %
-        "M": {"type": "PERCENT", "pattern": "0.00%"},
         "N": {"type": "PERCENT", "pattern": "0.00%"},
+        "O": {"type": "PERCENT", "pattern": "0.00%"},
         # CER
-        "O": {"type": "NUMBER", "pattern": "#,##0.00"},
         "P": {"type": "NUMBER", "pattern": "#,##0.00"},
-        "Q": {"type": "PERCENT", "pattern": "0.00%"},
+        "Q": {"type": "NUMBER", "pattern": "#,##0.00"},
         "R": {"type": "PERCENT", "pattern": "0.00%"},
         "S": {"type": "PERCENT", "pattern": "0.00%"},
+        "T": {"type": "PERCENT", "pattern": "0.00%"},
         # CCL
-        "T": {"type": "NUMBER", "pattern": "#,##0.00"},
         "U": {"type": "NUMBER", "pattern": "#,##0.00"},
-        "V": {"type": "PERCENT", "pattern": "0.00%"},
+        "V": {"type": "NUMBER", "pattern": "#,##0.00"},
         "W": {"type": "PERCENT", "pattern": "0.00%"},
         "X": {"type": "PERCENT", "pattern": "0.00%"},
+        "Y": {"type": "PERCENT", "pattern": "0.00%"},
     }
 
     reqs = [
