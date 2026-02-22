@@ -373,81 +373,109 @@ def setup_inversiones(ss: gspread.Spreadsheet):
         print(f"  ⚠️  Sheet {INVERSIONES_SHEET} no existe. Ejecuta upload_to_inversiones.py primero.")
         return
 
-    # Grupos de columnas para formato
+    # Grupos de columnas para formato (row 1 groups + data colors)
     inversiones_groups = [
-        ("A", "E", "ARS"),           # Mes + datos ARS
-        ("F", "I", "USD"),           # Datos USD
-        ("J", "K", "GANANCIAS"),     # Ganancias calculadas
-        ("L", "O", "VALOR USD"),     # CCL + Valor USD*CCL + Rendimientos
-        ("P", "T", "VS CER"),        # CER + comparación
-        ("U", "Y", "VS CCL"),        # CCL + comparación
+        ("A", "I", "INPUTS"),              # Datos raw de IEB
+        ("J", "K", "GANANCIAS"),           # Ganancias calculadas
+        ("L", "R", "RENDIMIENTO ARS"),     # Rendimiento ARS vs CER
+        ("S", "Y", "RENDIMIENTO USD"),     # Rendimiento USD vs SPY
+        ("Z", "AC", "CCL"),                # CCL y conversión
     ]
 
     # Colores para los grupos
     group_colors = {
-        "ARS": {"red": 0.8, "green": 0.898, "blue": 1.0},
-        "USD": {"red": 0.8, "green": 0.898, "blue": 0.898},
+        "INPUTS": {"red": 0.8, "green": 0.898, "blue": 1.0},
         "GANANCIAS": {"red": 1.0, "green": 1.0, "blue": 0.8},
-        "VALOR USD": {"red": 0.898, "green": 1.0, "blue": 0.898},
-        "VS CER": {"red": 1.0, "green": 0.8, "blue": 0.8},
-        "VS CCL": {"red": 0.988, "green": 0.898, "blue": 0.804},
+        "RENDIMIENTO ARS": {"red": 1.0, "green": 0.8, "blue": 0.8},
+        "RENDIMIENTO USD": {"red": 0.898, "green": 1.0, "blue": 0.898},
+        "CCL": {"red": 0.988, "green": 0.898, "blue": 0.804},
     }
 
     # Formatos por columna
     column_formats = {
         "A": {"type": "DATE", "pattern": "dd/mm/yyyy"},
-        # ARS columns - currency
+        # INPUTS - ARS
         "B": {"type": "NUMBER", "pattern": "#,##0.00"},
         "C": {"type": "NUMBER", "pattern": "#,##0.00"},
         "D": {"type": "NUMBER", "pattern": "#,##0.00"},
         "E": {"type": "NUMBER", "pattern": "#,##0.00"},
-        # USD columns - numbers with decimals
+        # INPUTS - USD
         "F": {"type": "NUMBER", "pattern": "#,##0.00"},
         "G": {"type": "NUMBER", "pattern": "#,##0.00"},
         "H": {"type": "NUMBER", "pattern": "#,##0.00"},
         "I": {"type": "NUMBER", "pattern": "#,##0.00"},
-        # Ganancias
+        # GANANCIAS
         "J": {"type": "NUMBER", "pattern": "#,##0.00"},
         "K": {"type": "NUMBER", "pattern": "#,##0.00"},
-        # CCL + USD*CCL
-        "L": {"type": "NUMBER", "pattern": "#,##0.00"},
-        "M": {"type": "NUMBER", "pattern": "#,##0.00"},
-        # Rendimientos %
-        "N": {"type": "PERCENT", "pattern": "0.00%"},
-        "O": {"type": "PERCENT", "pattern": "0.00%"},
-        # CER
-        "P": {"type": "NUMBER", "pattern": "#,##0.00"},
-        "Q": {"type": "NUMBER", "pattern": "#,##0.00"},
+        # RENDIMIENTO ARS
+        "L": {"type": "PERCENT", "pattern": "0.00%"},
+        "M": {"type": "PERCENT", "pattern": "0.00%"},
+        "N": {"type": "NUMBER", "pattern": "#,##0.00"},
+        "O": {"type": "NUMBER", "pattern": "#,##0.00"},
+        "P": {"type": "PERCENT", "pattern": "0.00%"},
+        "Q": {"type": "PERCENT", "pattern": "0.00%"},
         "R": {"type": "PERCENT", "pattern": "0.00%"},
+        # RENDIMIENTO USD
         "S": {"type": "PERCENT", "pattern": "0.00%"},
         "T": {"type": "PERCENT", "pattern": "0.00%"},
-        # CCL
         "U": {"type": "NUMBER", "pattern": "#,##0.00"},
         "V": {"type": "NUMBER", "pattern": "#,##0.00"},
         "W": {"type": "PERCENT", "pattern": "0.00%"},
         "X": {"type": "PERCENT", "pattern": "0.00%"},
         "Y": {"type": "PERCENT", "pattern": "0.00%"},
+        # CCL
+        "Z": {"type": "NUMBER", "pattern": "#,##0.00"},
+        "AA": {"type": "NUMBER", "pattern": "#,##0.00"},
+        "AB": {"type": "PERCENT", "pattern": "0.00%"},
+        "AC": {"type": "NUMBER", "pattern": "#,##0.00"},
     }
 
     reqs = [
-        # Freeze header row
+        # Unmerge any existing merges first
+        {
+            "unmergeCells": {
+                "range": {
+                    "sheetId": ws.id,
+                    "startRowIndex": 0,
+                    "endRowIndex": 2,
+                    "startColumnIndex": 0,
+                    "endColumnIndex": 30,
+                }
+            }
+        },
+        # Freeze header rows 1-2 only (no frozen columns to allow merging)
         {
             "updateSheetProperties": {
                 "properties": {
                     "sheetId": ws.id,
-                    "gridProperties": {"frozenRowCount": 1, "frozenColumnCount": 1},
+                    "gridProperties": {"frozenRowCount": 2, "frozenColumnCount": 0},
                 },
                 "fields": "gridProperties.frozenRowCount,gridProperties.frozenColumnCount",
             }
         },
-        # Header row background
+        # Row 1: Group titles background
         {
             "repeatCell": {
                 "range": {"sheetId": ws.id, "startRowIndex": 0, "endRowIndex": 1},
                 "cell": {
                     "userEnteredFormat": {
                         "backgroundColor": C["_bg"],
-                        "textFormat": {"bold": True, "foregroundColor": C["_fg"]},
+                        "textFormat": {"bold": True, "foregroundColor": C["_fg"], "fontSize": 11},
+                        "horizontalAlignment": "CENTER",
+                        "verticalAlignment": "MIDDLE",
+                    }
+                },
+                "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)",
+            }
+        },
+        # Row 2: Column headers background
+        {
+            "repeatCell": {
+                "range": {"sheetId": ws.id, "startRowIndex": 1, "endRowIndex": 2},
+                "cell": {
+                    "userEnteredFormat": {
+                        "backgroundColor": C["_bg"],
+                        "textFormat": {"bold": True, "foregroundColor": C["_fg"], "fontSize": 9},
                         "horizontalAlignment": "CENTER",
                     }
                 },
@@ -456,7 +484,25 @@ def setup_inversiones(ss: gspread.Spreadsheet):
         },
     ]
 
-    # Apply group colors to data rows
+    # Merge cells for group titles in row 1
+    for start, end, label in inversiones_groups:
+        if start != end:
+            reqs.append(
+                {
+                    "mergeCells": {
+                        "range": {
+                            "sheetId": ws.id,
+                            "startRowIndex": 0,
+                            "endRowIndex": 1,
+                            "startColumnIndex": col_idx(start),
+                            "endColumnIndex": col_idx(end) + 1,
+                        },
+                        "mergeType": "MERGE_ALL",
+                    }
+                }
+            )
+
+    # Apply group colors to data rows (row 3+)
     for start, end, label in inversiones_groups:
         color = group_colors.get(label, C["_bg"])
         # Create lighter version for data rows
@@ -470,7 +516,7 @@ def setup_inversiones(ss: gspread.Spreadsheet):
                 "repeatCell": {
                     "range": {
                         "sheetId": ws.id,
-                        "startRowIndex": 1,
+                        "startRowIndex": 2,
                         "endRowIndex": 100,
                         "startColumnIndex": col_idx(start),
                         "endColumnIndex": col_idx(end) + 1,
@@ -481,7 +527,7 @@ def setup_inversiones(ss: gspread.Spreadsheet):
             }
         )
 
-    # Apply number formats
+    # Apply number formats to data rows (row 3+)
     for col_let, fmt_config in column_formats.items():
         gs_format = {}
         if fmt_config["type"] == "DATE":
@@ -496,7 +542,7 @@ def setup_inversiones(ss: gspread.Spreadsheet):
                 "repeatCell": {
                     "range": {
                         "sheetId": ws.id,
-                        "startRowIndex": 1,
+                        "startRowIndex": 2,
                         "endRowIndex": 100,
                         "startColumnIndex": col_idx(col_let),
                         "endColumnIndex": col_idx(col_let) + 1,
