@@ -60,6 +60,21 @@ MONTHS_MAP = {
     "diciembre": 12,
 }
 
+MONTHS_MAP_SHORT = {
+    "ene": 1,
+    "feb": 2,
+    "mar": 3,
+    "abr": 4,
+    "may": 5,
+    "jun": 6,
+    "jul": 7,
+    "ago": 8,
+    "sep": 9,
+    "oct": 10,
+    "nov": 11,
+    "dic": 12,
+}
+
 
 def fetch_cer(since: date, until: date) -> dict[date, float]:
     results = {}
@@ -321,6 +336,52 @@ def get_last_date_from_sheet() -> date:
     return BACKFILL_FROM
 
 
+def get_last_rem_date_from_sheet() -> tuple[int, int]:
+    """
+    Obtiene la última fecha (año, mes) de REM para actualizar solo datos posteriores.
+    Returns: (year, month) tuple, defaults to (2022, 1) if sheet is empty.
+    """
+    try:
+        client = get_sheets_client()
+        ss = client.open_by_key(SPREADSHEET_ID)
+        ws_r = ss.worksheet(REM_SHEET)
+        existing_rows = ws_r.get_all_values()[3:]  # Skip metadata and headers (rows 1-3)
+
+        dates = []
+        for row in existing_rows:
+            if len(row) >= 1 and row[0]:
+                date_str = row[0].strip()
+                try:
+                    # Try YYYY-MM-DD format first (e.g., "2020-01-01")
+                    if "-" in date_str and len(date_str.split("-")[0]) == 4:
+                        parts = date_str.split("-")
+                        year = int(parts[0])
+                        month = int(parts[1])
+                        dates.append((year, month))
+                    # Try mmm-YY format (e.g., "ene-20")
+                    elif "-" in date_str and len(date_str.split("-")[0]) <= 3:
+                        parts = date_str.split("-")
+                        month_str = parts[0].lower()
+                        year_short = parts[1]
+
+                        if month_str in MONTHS_MAP_SHORT:
+                            month = MONTHS_MAP_SHORT[month_str]
+                            # Convert YY to YYYY (assume 20XX for now)
+                            year = 2000 + int(year_short)
+                            dates.append((year, month))
+                except (ValueError, IndexError, KeyError) as e:
+                    logger.warning(f"Failed to parse REM date '{date_str}': {e}")
+                    continue
+
+        if dates:
+            return max(dates)
+
+    except Exception as e:
+        logger.error(f"Failed to get last REM date from sheet: {e}")
+
+    return (BACKFILL_FROM.year, BACKFILL_FROM.month)
+
+
 def update_sheets(cer_data, ccl_data, rem_reports):
     client = get_sheets_client()
     ss = client.open_by_key(SPREADSHEET_ID)
@@ -363,24 +424,38 @@ def update_sheets(cer_data, ccl_data, rem_reports):
     if rem_reports:
         ws_r = ss.worksheet(REM_SHEET)
 
-        existing_rem = ws_r.get_all_values()[3:]
-        rem_map = {}
-        for row in existing_rem:
-            if len(row) >= 1 and row[0]:
-                rem_map[row[0]] = row[1:9]
+        # Update "Última Actualización" timestamp
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+        ws_r.update(range_name="B1", values=[[timestamp]], value_input_option="USER_ENTERED")
 
-        for m, projs in rem_reports.items():
-            rem_map[m] = projs
+        # Get existing data to find last row
+        existing_rem = ws_r.get_all_values()[3:]  # Skip rows 1-3 (metadata + headers)
+        existing_months = {row[0] for row in existing_rem if len(row) >= 1 and row[0]}
 
-        sorted_months = sorted(rem_map.keys())
-        payload = [[m] + rem_map[m] for m in sorted_months]
+        # Filter out reports that already exist
+        new_reports = {
+            month: projs
+            for month, projs in rem_reports.items()
+            if month not in existing_months
+        }
 
-        ws_r.batch_clear(["A4:I500"])
-        ws_r.update(
-            range_name=f"A4:I{4 + len(payload) - 1}",
-            values=payload,
-            value_input_option="USER_ENTERED",
-        )
+        if new_reports:
+            # Find the next empty row
+            next_row = 4 + len(existing_rem)
+
+            # Prepare payload for new reports only
+            sorted_new_months = sorted(new_reports.keys())
+            payload = [[m] + new_reports[m] for m in sorted_new_months]
+
+            # Append new data
+            ws_r.update(
+                range_name=f"A{next_row}:I{next_row + len(payload) - 1}",
+                values=payload,
+                value_input_option="USER_ENTERED",
+            )
+            logger.info(f"Added {len(payload)} new REM reports")
+        else:
+            logger.info("No new REM reports to add")
 
 
 def main():
@@ -433,7 +508,11 @@ def main():
             ccl[today[0]] = today[1]
 
     # REM: paralelizar procesamiento de publicaciones
-    rem_links = get_rem_publication_links((since_dt.year, since_dt.month))
+    # Use last REM date from sheet to avoid reprocessing old data
+    last_rem_date = get_last_rem_date_from_sheet()
+    logger.info(f"Last REM date in sheet: {last_rem_date[0]}-{last_rem_date[1]:02d}")
+
+    rem_links = get_rem_publication_links(last_rem_date)
     rem_reports = {}
 
     def process_rem_publication(pub):

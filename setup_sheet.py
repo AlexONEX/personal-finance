@@ -39,8 +39,8 @@ C = {
     "BENEFICIOS": {"red": 1.0, "green": 1.0, "blue": 0.8},
     "TOTAL": {"red": 0.898, "green": 0.8, "blue": 1.0},
     "INFLACIÓN (CER)": {"red": 1.0, "green": 0.8, "blue": 0.8},
-    "VS ÚLTIMO AUMENTO ARS": {"red": 0.949, "green": 0.949, "blue": 0.949},
-    "PROYECCIONES REM": {"red": 0.8, "green": 1.0, "blue": 1.0},
+    "COMPARACION CON ULTIMO AUMENTO ARS": {"red": 0.949, "green": 0.949, "blue": 0.949},
+    "PROYECCION REM": {"red": 0.8, "green": 1.0, "blue": 1.0},
     "DÓLAR": {"red": 0.8, "green": 0.898, "blue": 0.898},
     "VS ÚLTIMO AUMENTO USD": {"red": 0.988, "green": 0.898, "blue": 0.804},
     "_bg": {"red": 0.2, "green": 0.3, "blue": 0.4},
@@ -158,6 +158,16 @@ def setup_historic(ss: gspread.Spreadsheet):
 def setup_rem(ss: gspread.Spreadsheet):
     print(f"Configurando {REM_SHEET}...")
     ws = get_or_create_worksheet(ss, REM_SHEET, rows=100, cols=10)
+
+    # Row 1: Metadata
+    ws.update(
+        range_name="A1:B1",
+        values=[["Última Actualización", ""]],
+        value_input_option="USER_ENTERED",
+    )
+
+    # Row 2: Empty (spacing)
+    # Row 3: Headers
     headers = [
         "Mes Reporte",
         "Mes M",
@@ -169,8 +179,24 @@ def setup_rem(ss: gspread.Spreadsheet):
         "Mes M+6",
         "Próx. 12m",
     ]
-    ws.update(range_name="A3", values=[headers], value_input_option="USER_ENTERED")
+    ws.update(range_name="A3:I3", values=[headers], value_input_option="USER_ENTERED")
+
     reqs = [
+        # Row 1: Metadata format
+        {
+            "repeatCell": {
+                "range": {"sheetId": ws.id, "startRowIndex": 0, "endRowIndex": 1},
+                "cell": {
+                    "userEnteredFormat": {
+                        "backgroundColor": C["_bg"],
+                        "textFormat": {"bold": True, "foregroundColor": C["_fg"]},
+                        "horizontalAlignment": "LEFT",
+                    }
+                },
+                "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment)",
+            }
+        },
+        # Row 3: Headers format
         {
             "repeatCell": {
                 "range": {"sheetId": ws.id, "startRowIndex": 2, "endRowIndex": 3},
@@ -183,7 +209,7 @@ def setup_rem(ss: gspread.Spreadsheet):
                 },
                 "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment)",
             }
-        }
+        },
     ]
     apply_formatting(ss, ws.id, reqs)
 
