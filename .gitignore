@@ -35,3 +35,9 @@ Thumbs.db
 *.bak
 *.old
 *~
+
+# Generated data files
+portfolio_evolution.csv
+
+# Test scripts (may contain account-specific data)
+test_*.py

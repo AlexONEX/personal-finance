@@ -31,6 +31,7 @@ INCOME_SHEET = "Ingresos"
 TAX_SHEET = "impuestos"
 REM_SHEET = "REM"
 PANEL_SHEET = "Panel"
+INVERSIONES_SHEET = "Inversiones"
 
 C = {
     "SUELDO": {"red": 0.8, "green": 0.898, "blue": 1.0},
@@ -359,6 +360,153 @@ def setup_ingresos(ss: gspread.Spreadsheet):
     apply_formatting(ss, ws.id, reqs)
 
 
+def setup_inversiones(ss: gspread.Spreadsheet):
+    """
+    Aplica formato a la sheet Inversiones.
+    La sheet ya debe tener datos y headers (creados por upload_to_inversiones.py).
+    """
+    print(f"Configurando {INVERSIONES_SHEET}...")
+
+    try:
+        ws = ss.worksheet(INVERSIONES_SHEET)
+    except gspread.exceptions.WorksheetNotFound:
+        print(f"  ⚠️  Sheet {INVERSIONES_SHEET} no existe. Ejecuta upload_to_inversiones.py primero.")
+        return
+
+    # Grupos de columnas para formato
+    inversiones_groups = [
+        ("A", "F", "ARS"),           # Mes + datos ARS
+        ("G", "J", "USD"),           # Datos USD
+        ("K", "N", "VALOR USD"),     # CCL + Valor USD*CCL + Rendimientos
+        ("O", "S", "VS CER"),        # CER + comparación
+        ("T", "X", "VS CCL"),        # CCL + comparación
+    ]
+
+    # Colores para los grupos
+    group_colors = {
+        "ARS": {"red": 0.8, "green": 0.898, "blue": 1.0},
+        "USD": {"red": 0.8, "green": 0.898, "blue": 0.898},
+        "VALOR USD": {"red": 0.898, "green": 1.0, "blue": 0.898},
+        "VS CER": {"red": 1.0, "green": 0.8, "blue": 0.8},
+        "VS CCL": {"red": 0.988, "green": 0.898, "blue": 0.804},
+    }
+
+    # Formatos por columna
+    column_formats = {
+        "A": {"type": "DATE", "pattern": "dd/mm/yyyy"},
+        # ARS columns - currency
+        "B": {"type": "NUMBER", "pattern": "#,##0.00"},
+        "C": {"type": "NUMBER", "pattern": "#,##0.00"},
+        "D": {"type": "NUMBER", "pattern": "#,##0.00"},
+        "E": {"type": "NUMBER", "pattern": "#,##0.00"},
+        "F": {"type": "NUMBER", "pattern": "#,##0.00"},
+        # USD columns - numbers with decimals
+        "G": {"type": "NUMBER", "pattern": "#,##0.00"},
+        "H": {"type": "NUMBER", "pattern": "#,##0.00"},
+        "I": {"type": "NUMBER", "pattern": "#,##0.00"},
+        "J": {"type": "NUMBER", "pattern": "#,##0.00"},
+        # CCL + USD*CCL
+        "K": {"type": "NUMBER", "pattern": "#,##0.00"},
+        "L": {"type": "NUMBER", "pattern": "#,##0.00"},
+        # Rendimientos %
+        "M": {"type": "PERCENT", "pattern": "0.00%"},
+        "N": {"type": "PERCENT", "pattern": "0.00%"},
+        # CER
+        "O": {"type": "NUMBER", "pattern": "#,##0.00"},
+        "P": {"type": "NUMBER", "pattern": "#,##0.00"},
+        "Q": {"type": "PERCENT", "pattern": "0.00%"},
+        "R": {"type": "PERCENT", "pattern": "0.00%"},
+        "S": {"type": "PERCENT", "pattern": "0.00%"},
+        # CCL
+        "T": {"type": "NUMBER", "pattern": "#,##0.00"},
+        "U": {"type": "NUMBER", "pattern": "#,##0.00"},
+        "V": {"type": "PERCENT", "pattern": "0.00%"},
+        "W": {"type": "PERCENT", "pattern": "0.00%"},
+        "X": {"type": "PERCENT", "pattern": "0.00%"},
+    }
+
+    reqs = [
+        # Freeze header row
+        {
+            "updateSheetProperties": {
+                "properties": {
+                    "sheetId": ws.id,
+                    "gridProperties": {"frozenRowCount": 1, "frozenColumnCount": 1},
+                },
+                "fields": "gridProperties.frozenRowCount,gridProperties.frozenColumnCount",
+            }
+        },
+        # Header row background
+        {
+            "repeatCell": {
+                "range": {"sheetId": ws.id, "startRowIndex": 0, "endRowIndex": 1},
+                "cell": {
+                    "userEnteredFormat": {
+                        "backgroundColor": C["_bg"],
+                        "textFormat": {"bold": True, "foregroundColor": C["_fg"]},
+                        "horizontalAlignment": "CENTER",
+                    }
+                },
+                "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment)",
+            }
+        },
+    ]
+
+    # Apply group colors to data rows
+    for start, end, label in inversiones_groups:
+        color = group_colors.get(label, C["_bg"])
+        # Create lighter version for data rows
+        light_color = {
+            "red": min(1.0, color["red"] + (1 - color["red"]) * 0.85),
+            "green": min(1.0, color["green"] + (1 - color["green"]) * 0.85),
+            "blue": min(1.0, color["blue"] + (1 - color["blue"]) * 0.85),
+        }
+        reqs.append(
+            {
+                "repeatCell": {
+                    "range": {
+                        "sheetId": ws.id,
+                        "startRowIndex": 1,
+                        "endRowIndex": 100,
+                        "startColumnIndex": col_idx(start),
+                        "endColumnIndex": col_idx(end) + 1,
+                    },
+                    "cell": {"userEnteredFormat": {"backgroundColor": light_color}},
+                    "fields": "userEnteredFormat.backgroundColor",
+                }
+            }
+        )
+
+    # Apply number formats
+    for col_let, fmt_config in column_formats.items():
+        gs_format = {}
+        if fmt_config["type"] == "DATE":
+            gs_format = {"type": "DATE", "pattern": fmt_config["pattern"]}
+        elif fmt_config["type"] == "PERCENT":
+            gs_format = {"type": "PERCENT", "pattern": fmt_config["pattern"]}
+        elif fmt_config["type"] == "NUMBER":
+            gs_format = {"type": "NUMBER", "pattern": fmt_config["pattern"]}
+
+        reqs.append(
+            {
+                "repeatCell": {
+                    "range": {
+                        "sheetId": ws.id,
+                        "startRowIndex": 1,
+                        "endRowIndex": 100,
+                        "startColumnIndex": col_idx(col_let),
+                        "endColumnIndex": col_idx(col_let) + 1,
+                    },
+                    "cell": {"userEnteredFormat": {"numberFormat": gs_format}},
+                    "fields": "userEnteredFormat.numberFormat",
+                }
+            }
+        )
+
+    apply_formatting(ss, ws.id, reqs)
+    print(f"  ✅ Formato aplicado a {INVERSIONES_SHEET}")
+
+
 def main():
     if not SPREADSHEET_ID:
         print("ERROR: SPREADSHEET_ID no definido en .env")
@@ -369,6 +517,7 @@ def main():
     setup_historic(ss)
     setup_rem(ss)
     setup_ingresos(ss)
+    setup_inversiones(ss)
     print(
         f"\nSetup completo: https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit"
     )
