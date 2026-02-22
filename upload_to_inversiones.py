@@ -31,9 +31,9 @@ def load_portfolio_data(csv_file: str) -> list[dict]:
 
 def prepare_raw_data(portfolio_data: list[dict]) -> list[list]:
     """
-    Prepara solo los datos RAW para subir (columnas A-I).
+    Prepara solo los datos RAW para subir (columnas B-I).
+    Columna A será una fórmula de fecha automática (mes +1).
 
-    A: Mes (formato dd/mm/yyyy - primer día del mes)
     B: Ingreso ARS
     C: Egreso ARS
     D: Valor Inicio ARS
@@ -46,14 +46,7 @@ def prepare_raw_data(portfolio_data: list[dict]) -> list[list]:
     rows = []
 
     for data in portfolio_data:
-        # Convert mes YYYY-MM to dd/mm/yyyy (first day of month)
-        mes = data["Mes"]
-        year, month = map(int, mes.split("-"))
-        fecha = date(year, month, 1)
-        fecha_str = fecha.strftime("%d/%m/%Y")
-
         rows.append([
-            fecha_str,                          # A
             float(data["Ingresos ARS"]),        # B
             float(data["Egresos ARS"]),         # C
             float(data["Inicio ARS"]),          # D
@@ -135,11 +128,12 @@ def create_formulas(row_num: int) -> list:
         # T: Rendimiento % Acumulado USD
         f'=IF(S{r}="-", "-", IF({is_first_row}, S{r}, (1+T{prev_r})*(1+S{r})-1))',
 
-        # U: SPY Inicio Mes (primer día del mes) - Column D in historic_data
-        f'=IFERROR(VLOOKUP(A{r}, historic_data!$A$4:$D, 4, TRUE), "-")',
+        # U: SPY Inicio Mes (primer día del mes o último valor disponible antes)
+        # Usa FILTER para obtener valores <= fecha, luego toma el último
+        f'=IFERROR(INDEX(FILTER(historic_data!$D$4:$D, historic_data!$A$4:$A <= A{r}, historic_data!$D$4:$D <> ""), COUNTA(FILTER(historic_data!$D$4:$D, historic_data!$A$4:$A <= A{r}, historic_data!$D$4:$D <> ""))), "-")',
 
-        # V: SPY Fin Mes (último día del mes)
-        f'=IFERROR(VLOOKUP({ultimo_dia_formula}, historic_data!$A$4:$D, 4, TRUE), "-")',
+        # V: SPY Fin Mes (último día del mes o último valor disponible antes)
+        f'=IFERROR(INDEX(FILTER(historic_data!$D$4:$D, historic_data!$A$4:$A <= {ultimo_dia_formula}, historic_data!$D$4:$D <> ""), COUNTA(FILTER(historic_data!$D$4:$D, historic_data!$A$4:$A <= {ultimo_dia_formula}, historic_data!$D$4:$D <> ""))), "-")',
 
         # W: Δ% SPY MoM
         f'=IF(OR(U{r}="-", V{r}="-"), "-", (V{r}/U{r})-1)',
@@ -231,10 +225,27 @@ def upload_to_sheet(client, data_rows: list[list]):
     print(f"Uploading headers...")
     ws.update(range_name="A2:AC2", values=[headers])
 
-    # Upload RAW data (A-I) starting at row 3
-    print(f"Uploading {len(data_rows)} rows of raw data (columns A-I)...")
+    # Upload columna A: Fecha inicial + fórmulas de mes +1
+    print(f"Uploading fecha column...")
+    # Row 3: primera fecha (01/01/2025 - primer mes de portfolio)
+    ws.update(range_name="A3", values=[["01/01/2025"]], value_input_option="USER_ENTERED")
+
+    # Row 4+: fórmula EDATE(A3, 1) que suma 1 mes
+    date_formulas = []
+    for i in range(4, len(data_rows) + 3):  # Start at row 4
+        date_formulas.append([f"=EDATE(A{i-1}, 1)"])
+
+    if date_formulas:
+        ws.update(
+            range_name=f"A4:A{len(data_rows) + 2}",
+            values=date_formulas,
+            value_input_option="USER_ENTERED"
+        )
+
+    # Upload RAW data (B-I) starting at row 3
+    print(f"Uploading {len(data_rows)} rows of raw data (columns B-I)...")
     ws.update(
-        range_name=f"A3:I{len(data_rows) + 2}",
+        range_name=f"B3:I{len(data_rows) + 2}",
         values=data_rows,
         value_input_option="USER_ENTERED",
     )
@@ -287,7 +298,10 @@ def main():
     print("- Row 1: Títulos de grupos (INPUTS, GANANCIAS, RENDIMIENTO ARS, RENDIMIENTO USD, CCL)")
     print("- Row 2: Headers de columnas")
     print("- Row 3+: Datos")
-    print("\nColumnas A-I: Datos raw de IEB (mes, ingresos, egresos, valores)")
+    print("\nColumna A: Fórmula de fecha (mes +1)")
+    print("  - A3: 01/01/2025 (manual - podés cambiar)")
+    print("  - A4+: =EDATE(A3, 1) (automático)")
+    print("Columnas B-I: Datos raw de IEB (ingresos, egresos, valores ARS/USD)")
     print("Columnas J-AC: Fórmulas calculadas (ganancias, rendimientos ARS/USD vs CER/SPY, CCL)")
 
 

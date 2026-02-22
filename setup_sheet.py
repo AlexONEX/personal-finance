@@ -502,7 +502,7 @@ def setup_inversiones(ss: gspread.Spreadsheet):
                 }
             )
 
-    # Apply group colors to data rows (row 3+)
+    # Apply group colors to data rows (row 3+) - 1000 rows
     for start, end, label in inversiones_groups:
         color = group_colors.get(label, C["_bg"])
         # Create lighter version for data rows
@@ -517,7 +517,7 @@ def setup_inversiones(ss: gspread.Spreadsheet):
                     "range": {
                         "sheetId": ws.id,
                         "startRowIndex": 2,
-                        "endRowIndex": 100,
+                        "endRowIndex": 1002,  # 1000 rows of data
                         "startColumnIndex": col_idx(start),
                         "endColumnIndex": col_idx(end) + 1,
                     },
@@ -527,7 +527,7 @@ def setup_inversiones(ss: gspread.Spreadsheet):
             }
         )
 
-    # Apply number formats to data rows (row 3+)
+    # Apply number formats to data rows (row 3+) - 1000 rows
     for col_let, fmt_config in column_formats.items():
         gs_format = {}
         if fmt_config["type"] == "DATE":
@@ -543,7 +543,7 @@ def setup_inversiones(ss: gspread.Spreadsheet):
                     "range": {
                         "sheetId": ws.id,
                         "startRowIndex": 2,
-                        "endRowIndex": 100,
+                        "endRowIndex": 1002,  # 1000 rows of data
                         "startColumnIndex": col_idx(col_let),
                         "endColumnIndex": col_idx(col_let) + 1,
                     },
