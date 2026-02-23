@@ -44,32 +44,30 @@ Este documento describe todas las columnas de la hoja de cálculo "Ingresos".
 
 ## 8. INFLACIÓN (CER)
 
-*   **T - Δ% CER MoM**: Inflación mensual oficial (CER).
-*   **U - Gap REM 3m**: Diferencia entre inflación real y proyección REM de hace 3 meses.
-*   **V - Gap REM 6m**: Diferencia entre inflación real y proyección REM de hace 6 meses.
-*   **W - Poder Adquisitivo MoM**: Diferencia real entre el aumento de sueldo y la inflación del mes.
+*   **T - Δ% CER MoM**: Acumulación CER desde 30 días antes de la fecha de pago.
+*   **U - Poder Adquisitivo MoM**: Diferencia real entre el aumento de sueldo y la inflación del mes.
 
 ## 9. PROYECCION REM (Expectativas de Mercado)
 
-*   **X - REM 3m (%)**: Inflación proyectada por el BCRA para los próximos 3 meses.
-*   **Y - Objetivo 3m Bruto**: Sueldo bruto objetivo para dentro de 3 meses.
-*   **Z - Objetivo 3m Neto**: Sueldo neto objetivo para dentro de 3 meses.
-*   **AA - REM 6m (%)**: Inflación proyectada para los próximos 6 meses.
-*   **AB - Objetivo 6m Bruto**: Sueldo bruto objetivo para dentro de 6 meses.
-*   **AC - Objetivo 6m Neto**: Sueldo neto objetivo para dentro de 6 meses.
+*   **V - REM 3m (%)**: Inflación proyectada por el BCRA para los próximos 3 meses.
+*   **W - Objetivo 3m Bruto**: Sueldo bruto objetivo para dentro de 3 meses.
+*   **X - Objetivo 3m Neto**: Sueldo neto objetivo para dentro de 3 meses.
+*   **Y - REM 6m (%)**: Inflación proyectada para los próximos 6 meses.
+*   **Z - Objetivo 6m Bruto**: Sueldo bruto objetivo para dentro de 6 meses.
+*   **AA - Objetivo 6m Neto**: Sueldo neto objetivo para dentro de 6 meses.
 
 ## 10. DÓLAR
 
-*   **AD - CCL**: Cotización del dólar CCL al cierre de mes.
-*   **AE - Δ % CCL MoM**: Variación mensual del dólar.
-*   **AF - Sueldo USD Bruto**: Sueldo bruto en dólares CCL.
-*   **AG - Sueldo USD Neto**: Sueldo neto en dólares CCL.
+*   **AB - CCL**: Cotización del dólar CCL al cierre de mes.
+*   **AC - Δ % CCL MoM**: Variación mensual del dólar.
+*   **AD - Sueldo USD Bruto**: Sueldo bruto en dólares CCL.
+*   **AE - Sueldo USD Neto**: Sueldo neto en dólares CCL.
 
 ## 11. VS ÚLTIMO AUMENTO USD
 
-*   **AH - CCL Base**: CCL al momento del último aumento.
-*   **AI - Sueldo USD Bruto Base**: Sueldo bruto USD al momento del aumento.
-*   **AJ - Sueldo USD Neto Base**: Sueldo neto USD al momento del aumento.
-*   **AK - Paridad USD (Bruto)**: Sueldo en ARS para recuperar Bruto USD del aumento.
-*   **AL - Paridad USD (Neto)**: Sueldo en ARS para recuperar Neto USD del aumento.
-*   **AM - Atraso USD**: Variación real en USD respecto al último aumento.
+*   **AF - CCL Base**: CCL al momento del último aumento.
+*   **AG - Sueldo USD Bruto Base**: Sueldo bruto USD al momento del aumento.
+*   **AH - Sueldo USD Neto Base**: Sueldo neto USD al momento del aumento.
+*   **AI - Paridad USD (Bruto)**: Sueldo en ARS para recuperar Bruto USD del aumento.
+*   **AJ - Paridad USD (Neto)**: Sueldo en ARS para recuperar Neto USD del aumento.
+*   **AK - Atraso USD**: Variación real en USD respecto al último aumento.
