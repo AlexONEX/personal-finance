@@ -82,12 +82,12 @@ INCOME_COLUMNS = [
     (
         "U",
         "Gap REM 3m",
-        '=IFERROR(T{r} - VLOOKUP(OFFSET(A{r}, -3, 0), REM!$A:$I, 5, FALSE), "-")',
+        '=IFERROR(T{r} - VLOOKUP(EOMONTH(OFFSET(A{r}, -3, 0), 0), REM!$A:$I, 5, FALSE), "-")',
     ),
     (
         "V",
         "Gap REM 6m",
-        '=IFERROR(T{r} - VLOOKUP(OFFSET(A{r}, -6, 0), REM!$A:$I, 8, FALSE), "-")',
+        '=IFERROR(T{r} - VLOOKUP(EOMONTH(OFFSET(A{r}, -6, 0), 0), REM!$A:$I, 8, FALSE), "-")',
     ),
     (
         "W",
@@ -97,14 +97,14 @@ INCOME_COLUMNS = [
     (
         "X",
         "REM 3m (%)",
-        '=IF(OR(ISBLANK(C{r}), C{r}=0), "-", (1+IFERROR(VLOOKUP(A{r}, REM!$A$4:$I, 3, FALSE), 0))*(1+IFERROR(VLOOKUP(A{r}, REM!$A$4:$I, 4, FALSE), 0))*(1+IFERROR(VLOOKUP(A{r}, REM!$A$4:$I, 5, FALSE), 0))-1)',
+        '=IF(OR(ISBLANK(C{r}), C{r}=0), "-", (1+IFERROR(VLOOKUP(EOMONTH(A{r}, 0), REM!$A$4:$I, 3, FALSE), 0))*(1+IFERROR(VLOOKUP(EOMONTH(A{r}, 0), REM!$A$4:$I, 4, FALSE), 0))*(1+IFERROR(VLOOKUP(EOMONTH(A{r}, 0), REM!$A$4:$I, 5, FALSE), 0))-1)',
     ),
     ("Y", "Objetivo 3m Bruto", '=IF(X{r}="-", "-", IFERROR(C{r} * (1+X{r}), "-"))'),
     ("Z", "Objetivo 3m Neto", '=IF(X{r}="-", "-", IFERROR(G{r} * (1+X{r}), "-"))'),
     (
         "AA",
         "REM 6m (%)",
-        '=IF(OR(ISBLANK(C{r}), C{r}=0), "-", (1+X{r})*(1+IFERROR(VLOOKUP(A{r}, REM!$A$4:$I, 6, FALSE), 0))*(1+IFERROR(VLOOKUP(A{r}, REM!$A$4:$I, 7, FALSE), 0))*(1+IFERROR(VLOOKUP(A{r}, REM!$A$4:$I, 8, FALSE), 0))-1)',
+        '=IF(OR(ISBLANK(C{r}), C{r}=0), "-", (1+X{r})*(1+IFERROR(VLOOKUP(EOMONTH(A{r}, 0), REM!$A$4:$I, 6, FALSE), 0))*(1+IFERROR(VLOOKUP(EOMONTH(A{r}, 0), REM!$A$4:$I, 7, FALSE), 0))*(1+IFERROR(VLOOKUP(EOMONTH(A{r}, 0), REM!$A$4:$I, 8, FALSE), 0))-1)',
     ),
     ("AB", "Objetivo 6m Bruto", '=IF(AA{r}="-", "-", IFERROR(C{r} * (1+AA{r}), "-"))'),
     ("AC", "Objetivo 6m Neto", '=IF(AA{r}="-", "-", IFERROR(G{r} * (1+AA{r}), "-"))'),
