@@ -146,12 +146,12 @@ INCOME_COLUMNS = [
     (
         "AK",
         "Paridad USD (Bruto)",
-        '=IF(OR(R{r}="-", AD{r}="-", AH{r}="-"), "-", IFERROR(R{r} * (AD{r}/AH{r}), "-"))',
+        '=IF(OR(N{r}="-", AD{r}="-", AH{r}="-"), "-", IFERROR(N{r} * (AD{r}/AH{r}), "-"))',
     ),
     (
         "AL",
         "Paridad USD (Neto)",
-        '=IF(OR(S{r}="-", AD{r}="-", AH{r}="-"), "-", IFERROR(S{r} * (AD{r}/AH{r}), "-"))',
+        '=IF(OR(O{r}="-", AD{r}="-", AH{r}="-"), "-", IFERROR(O{r} * (AD{r}/AH{r}), "-"))',
     ),
     (
         "AM",

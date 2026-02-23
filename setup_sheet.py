@@ -334,6 +334,10 @@ def setup_ingresos(ss: gspread.Spreadsheet):
             )
 
     for col_let, fmt_config in COLUMN_FORMATS.items():
+        # Skip columns A and B (no format override)
+        if col_let in ["A", "B"]:
+            continue
+
         gs_format = {}
         if fmt_config["type"] == "DATE":
             gs_format = {"type": "DATE", "pattern": fmt_config["pattern"]}
@@ -348,6 +352,7 @@ def setup_ingresos(ss: gspread.Spreadsheet):
                     "range": {
                         "sheetId": ws.id,
                         "startRowIndex": 2,
+                        "endRowIndex": MAX_ROWS,
                         "startColumnIndex": col_idx(col_let),
                         "endColumnIndex": col_idx(col_let) + 1,
                     },
