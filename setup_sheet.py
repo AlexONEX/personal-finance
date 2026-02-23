@@ -370,16 +370,18 @@ def setup_inversiones(ss: gspread.Spreadsheet):
     try:
         ws = ss.worksheet(INVERSIONES_SHEET)
     except gspread.exceptions.WorksheetNotFound:
-        print(f"  ⚠️  Sheet {INVERSIONES_SHEET} no existe. Ejecuta upload_to_inversiones.py primero.")
+        print(
+            f"  ⚠️  Sheet {INVERSIONES_SHEET} no existe. Ejecuta upload_to_inversiones.py primero."
+        )
         return
 
     # Grupos de columnas para formato (row 1 groups + data colors)
     inversiones_groups = [
-        ("A", "I", "INPUTS"),              # Datos raw de IEB
-        ("J", "K", "GANANCIAS"),           # Ganancias calculadas
-        ("L", "R", "RENDIMIENTO ARS"),     # Rendimiento ARS vs CER
-        ("S", "Y", "RENDIMIENTO USD"),     # Rendimiento USD vs SPY
-        ("Z", "AC", "CCL"),                # CCL y conversión
+        ("A", "I", "INPUTS"),  # Datos raw de IEB
+        ("J", "K", "GANANCIAS"),  # Ganancias calculadas
+        ("L", "R", "RENDIMIENTO ARS"),  # Rendimiento ARS vs CER
+        ("S", "Y", "RENDIMIENTO USD"),  # Rendimiento USD vs SPY
+        ("Z", "AC", "CCL"),  # CCL y conversión
     ]
 
     # Colores para los grupos
@@ -460,7 +462,11 @@ def setup_inversiones(ss: gspread.Spreadsheet):
                 "cell": {
                     "userEnteredFormat": {
                         "backgroundColor": C["_bg"],
-                        "textFormat": {"bold": True, "foregroundColor": C["_fg"], "fontSize": 11},
+                        "textFormat": {
+                            "bold": True,
+                            "foregroundColor": C["_fg"],
+                            "fontSize": 11,
+                        },
                         "horizontalAlignment": "CENTER",
                         "verticalAlignment": "MIDDLE",
                     }
@@ -475,7 +481,11 @@ def setup_inversiones(ss: gspread.Spreadsheet):
                 "cell": {
                     "userEnteredFormat": {
                         "backgroundColor": C["_bg"],
-                        "textFormat": {"bold": True, "foregroundColor": C["_fg"], "fontSize": 9},
+                        "textFormat": {
+                            "bold": True,
+                            "foregroundColor": C["_fg"],
+                            "fontSize": 9,
+                        },
                         "horizontalAlignment": "CENTER",
                     }
                 },
@@ -554,7 +564,7 @@ def setup_inversiones(ss: gspread.Spreadsheet):
         )
 
     apply_formatting(ss, ws.id, reqs)
-    print(f"  ✅ Formato aplicado a {INVERSIONES_SHEET}")
+    print(f"Formato aplicado a {INVERSIONES_SHEET}")
 
 
 def main():

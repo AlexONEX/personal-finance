@@ -6,8 +6,6 @@ Solo sube datos RAW (columnas A-J), el resto son FÓRMULAS que buscan en histori
 
 import csv
 import os
-from datetime import datetime, date
-from calendar import monthrange
 from dotenv import load_dotenv
 
 from src.connectors.sheets import get_sheets_client
@@ -46,16 +44,18 @@ def prepare_raw_data(portfolio_data: list[dict]) -> list[list]:
     rows = []
 
     for data in portfolio_data:
-        rows.append([
-            float(data["Ingresos ARS"]),        # B
-            float(data["Egresos ARS"]),         # C
-            float(data["Inicio ARS"]),          # D
-            float(data["Fin ARS"]),             # E
-            float(data["Ingresos USD"]),        # F
-            float(data["Egresos USD"]),         # G
-            float(data["Inicio USD"]),          # H
-            float(data["Fin USD"]),             # I
-        ])
+        rows.append(
+            [
+                float(data["Ingresos ARS"]),  # B
+                float(data["Egresos ARS"]),  # C
+                float(data["Inicio ARS"]),  # D
+                float(data["Fin ARS"]),  # E
+                float(data["Ingresos USD"]),  # F
+                float(data["Egresos USD"]),  # G
+                float(data["Inicio USD"]),  # H
+                float(data["Fin USD"]),  # I
+            ]
+        )
 
     return rows
 
@@ -89,70 +89,51 @@ def create_formulas(row_num: int) -> list:
     prev_r = row_num - 1
 
     # Helper: último día del mes
-    ultimo_dia_formula = f'DATE(YEAR(A{r}), MONTH(A{r}), DAY(EOMONTH(A{r}, 0)))'
+    ultimo_dia_formula = f"DATE(YEAR(A{r}), MONTH(A{r}), DAY(EOMONTH(A{r}, 0)))"
 
     # Primera fila de datos es row 3
-    is_first_row = f'ROW(A{r})=3'
+    is_first_row = f"ROW(A{r})=3"
 
     formulas = [
         # J: Ganancia ARS = Fin - Inicio - Ingresos + Egresos
-        f'=E{r}-D{r}-B{r}+C{r}',
-
+        f"=E{r}-D{r}-B{r}+C{r}",
         # K: Ganancia USD = Fin - Inicio - Ingresos + Egresos
-        f'=I{r}-H{r}-F{r}+G{r}',
-
+        f"=I{r}-H{r}-F{r}+G{r}",
         # L: Rendimiento % MoM ARS = (Fin - Inicio - Ingresos + Egresos) / (Inicio + Ingresos - Egresos)
         f'=IF(D{r}=0, "-", (E{r}-D{r}-B{r}+C{r})/(D{r}+B{r}-C{r}))',
-
         # M: Rendimiento % Acumulado ARS
         f'=IF(L{r}="-", "-", IF({is_first_row}, L{r}, (1+M{prev_r})*(1+L{r})-1))',
-
         # N: CER Inicio Mes (primer día del mes)
         f'=IFERROR(VLOOKUP(A{r}, historic_data!$A$4:$B, 2, TRUE), "-")',
-
         # O: CER Fin Mes (último día del mes)
         f'=IFERROR(VLOOKUP({ultimo_dia_formula}, historic_data!$A$4:$B, 2, TRUE), "-")',
-
         # P: Δ% CER MoM
         f'=IF(OR(N{r}="-", O{r}="-"), "-", (O{r}/N{r})-1)',
-
         # Q: Rendimiento MoM vs CER
         f'=IF(OR(L{r}="-", P{r}="-"), "-", L{r}-P{r})',
-
         # R: Rendimiento Acumulado vs CER
         f'=IF(OR(M{r}="-", P{r}="-"), "-", IF({is_first_row}, Q{r}, (1+R{prev_r})*(1+Q{r})-1))',
-
         # S: Rendimiento % MoM USD = (Fin - Inicio - Ingresos + Egresos) / (Inicio + Ingresos - Egresos)
         f'=IF(H{r}=0, "-", (I{r}-H{r}-F{r}+G{r})/(H{r}+F{r}-G{r}))',
-
         # T: Rendimiento % Acumulado USD
         f'=IF(S{r}="-", "-", IF({is_first_row}, S{r}, (1+T{prev_r})*(1+S{r})-1))',
-
         # U: SPY Inicio Mes (primer día del mes o último valor disponible antes)
         # Usa FILTER para obtener valores <= fecha, luego toma el último
         f'=IFERROR(INDEX(FILTER(historic_data!$D$4:$D, historic_data!$A$4:$A <= A{r}, historic_data!$D$4:$D <> ""), COUNTA(FILTER(historic_data!$D$4:$D, historic_data!$A$4:$A <= A{r}, historic_data!$D$4:$D <> ""))), "-")',
-
         # V: SPY Fin Mes (último día del mes o último valor disponible antes)
         f'=IFERROR(INDEX(FILTER(historic_data!$D$4:$D, historic_data!$A$4:$A <= {ultimo_dia_formula}, historic_data!$D$4:$D <> ""), COUNTA(FILTER(historic_data!$D$4:$D, historic_data!$A$4:$A <= {ultimo_dia_formula}, historic_data!$D$4:$D <> ""))), "-")',
-
         # W: Δ% SPY MoM
         f'=IF(OR(U{r}="-", V{r}="-"), "-", (V{r}/U{r})-1)',
-
         # X: Rendimiento MoM vs SPY
         f'=IF(OR(S{r}="-", W{r}="-"), "-", S{r}-W{r})',
-
         # Y: Rendimiento Acumulado vs SPY
         f'=IF(OR(T{r}="-", W{r}="-"), "-", IF({is_first_row}, X{r}, (1+Y{prev_r})*(1+X{r})-1))',
-
         # Z: CCL Inicio Mes
         f'=IFERROR(INDEX(FILTER(historic_data!$C$4:$C, historic_data!$C$4:$C <> ""), MATCH(A{r}, FILTER(historic_data!$A$4:$A, historic_data!$C$4:$C <> ""), 1)), "-")',
-
         # AA: CCL Fin Mes
         f'=IFERROR(INDEX(FILTER(historic_data!$C$4:$C, historic_data!$C$4:$C <> ""), MATCH({ultimo_dia_formula}, FILTER(historic_data!$A$4:$A, historic_data!$C$4:$C <> ""), 1)), "-")',
-
         # AB: Δ% CCL MoM
         f'=IF(OR(Z{r}="-", AA{r}="-"), "-", (AA{r}/Z{r})-1)',
-
         # AC: Valor Fin USD * CCL Fin
         f'=IF(AA{r}="-", "-", I{r}*AA{r})',
     ]
@@ -168,15 +149,34 @@ def upload_to_sheet(client, data_rows: list[list]):
     # Row 1: Group titles
     group_titles = [
         "INPUTS",  # A
-        "", "", "", "", "", "", "", "",  # B-I (span)
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",  # B-I (span)
         "GANANCIAS",  # J
         "",  # K (span)
         "RENDIMIENTO ARS",  # L
-        "", "", "", "", "", "",  # M-R (span)
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",  # M-R (span)
         "RENDIMIENTO USD",  # S
-        "", "", "", "", "", "",  # T-Y (span)
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",  # T-Y (span)
         "CCL",  # Z
-        "", "", "",  # AA-AC (span)
+        "",
+        "",
+        "",  # AA-AC (span)
     ]
 
     # Row 2: Column headers
@@ -218,28 +218,30 @@ def upload_to_sheet(client, data_rows: list[list]):
     ws.batch_clear([f"A1:AC{last_row}"])
 
     # Upload group titles (row 1)
-    print(f"Uploading group titles...")
+    print("Uploading group titles...")
     ws.update(range_name="A1:AC1", values=[group_titles])
 
     # Upload headers (row 2)
-    print(f"Uploading headers...")
+    print("Uploading headers...")
     ws.update(range_name="A2:AC2", values=[headers])
 
     # Upload columna A: Fecha inicial + fórmulas de mes +1
-    print(f"Uploading fecha column...")
+    print("Uploading fecha column...")
     # Row 3: primera fecha (01/01/2025 - primer mes de portfolio)
-    ws.update(range_name="A3", values=[["01/01/2025"]], value_input_option="USER_ENTERED")
+    ws.update(
+        range_name="A3", values=[["01/01/2025"]], value_input_option="USER_ENTERED"
+    )
 
     # Row 4+: fórmula EDATE(A3, 1) que suma 1 mes
     date_formulas = []
     for i in range(4, len(data_rows) + 3):  # Start at row 4
-        date_formulas.append([f"=EDATE(A{i-1}, 1)"])
+        date_formulas.append([f"=EDATE(A{i - 1}, 1)"])
 
     if date_formulas:
         ws.update(
             range_name=f"A4:A{len(data_rows) + 2}",
             values=date_formulas,
-            value_input_option="USER_ENTERED"
+            value_input_option="USER_ENTERED",
         )
 
     # Upload RAW data (B-I) starting at row 3
@@ -251,16 +253,13 @@ def upload_to_sheet(client, data_rows: list[list]):
     )
 
     # Upload formulas (J-AC) starting at row 3
-    print(f"Uploading formulas (columns J-AC)...")
+    print("Uploading formulas (columns J-AC)...")
     formula_updates = []
 
     for i in range(3, len(data_rows) + 3):  # Start at row 3
         formulas = create_formulas(i)
         # Batch update for this row
-        formula_updates.append({
-            "range": f"J{i}:AC{i}",
-            "values": [formulas]
-        })
+        formula_updates.append({"range": f"J{i}:AC{i}", "values": [formulas]})
 
     # Batch update all formulas
     if formula_updates:
@@ -282,7 +281,7 @@ def main():
     print(f"   Loaded {len(portfolio_data)} months")
 
     # Prepare raw data
-    print(f"\n2. Preparing raw data (columns A-I)...")
+    print("\n2. Preparing raw data (columns A-I)...")
     data_rows = prepare_raw_data(portfolio_data)
     print(f"   Prepared {len(data_rows)} rows")
 
@@ -295,14 +294,18 @@ def main():
     print("Done!")
     print("=" * 60)
     print("\nEstructura:")
-    print("- Row 1: Títulos de grupos (INPUTS, GANANCIAS, RENDIMIENTO ARS, RENDIMIENTO USD, CCL)")
+    print(
+        "- Row 1: Títulos de grupos (INPUTS, GANANCIAS, RENDIMIENTO ARS, RENDIMIENTO USD, CCL)"
+    )
     print("- Row 2: Headers de columnas")
     print("- Row 3+: Datos")
     print("\nColumna A: Fórmula de fecha (mes +1)")
     print("  - A3: 01/01/2025 (manual - podés cambiar)")
     print("  - A4+: =EDATE(A3, 1) (automático)")
     print("Columnas B-I: Datos raw de IEB (ingresos, egresos, valores ARS/USD)")
-    print("Columnas J-AC: Fórmulas calculadas (ganancias, rendimientos ARS/USD vs CER/SPY, CCL)")
+    print(
+        "Columnas J-AC: Fórmulas calculadas (ganancias, rendimientos ARS/USD vs CER/SPY, CCL)"
+    )
 
 
 if __name__ == "__main__":

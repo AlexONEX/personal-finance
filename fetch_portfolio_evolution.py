@@ -58,7 +58,9 @@ def fetch_monthly_performance(
         "currency": currency,
     }
 
-    response = requests.get(url, headers=get_headers(bearer_token), params=params, timeout=30)
+    response = requests.get(
+        url, headers=get_headers(bearer_token), params=params, timeout=30
+    )
     response.raise_for_status()
     return response.json()
 
@@ -146,34 +148,44 @@ def main():
 
         try:
             # Fetch ARS y USD
-            perf_ars = fetch_monthly_performance(bearer_token, from_date, to_date, "ARS")
-            perf_usd = fetch_monthly_performance(bearer_token, from_date, to_date, "USD")
+            perf_ars = fetch_monthly_performance(
+                bearer_token, from_date, to_date, "ARS"
+            )
+            perf_usd = fetch_monthly_performance(
+                bearer_token, from_date, to_date, "USD"
+            )
 
             # Calcular cash flows
-            ingresos_ars, egresos_ars = calculate_cash_flows(perf_ars.get("performanceDetail", []))
-            ingresos_usd, egresos_usd = calculate_cash_flows(perf_usd.get("performanceDetail", []))
+            ingresos_ars, egresos_ars = calculate_cash_flows(
+                perf_ars.get("performanceDetail", [])
+            )
+            ingresos_usd, egresos_usd = calculate_cash_flows(
+                perf_usd.get("performanceDetail", [])
+            )
 
-            results.append({
-                "mes": month_key,
-                "from_date": from_date.isoformat(),
-                "to_date": to_date.isoformat(),
-                "ars": {
-                    "valor_inicio": perf_ars.get("oldTotalPosition", 0),
-                    "valor_fin": perf_ars.get("currentTotalPosition", 0),
-                    "ingresos": ingresos_ars,
-                    "egresos": egresos_ars,
-                    "total_invertido": perf_ars.get("investedTotal", 0),
-                    "ganancia": perf_ars.get("earnings", 0),
-                },
-                "usd": {
-                    "valor_inicio": perf_usd.get("oldTotalPosition", 0),
-                    "valor_fin": perf_usd.get("currentTotalPosition", 0),
-                    "ingresos": ingresos_usd,
-                    "egresos": egresos_usd,
-                    "total_invertido": perf_usd.get("investedTotal", 0),
-                    "ganancia": perf_usd.get("earnings", 0),
-                },
-            })
+            results.append(
+                {
+                    "mes": month_key,
+                    "from_date": from_date.isoformat(),
+                    "to_date": to_date.isoformat(),
+                    "ars": {
+                        "valor_inicio": perf_ars.get("oldTotalPosition", 0),
+                        "valor_fin": perf_ars.get("currentTotalPosition", 0),
+                        "ingresos": ingresos_ars,
+                        "egresos": egresos_ars,
+                        "total_invertido": perf_ars.get("investedTotal", 0),
+                        "ganancia": perf_ars.get("earnings", 0),
+                    },
+                    "usd": {
+                        "valor_inicio": perf_usd.get("oldTotalPosition", 0),
+                        "valor_fin": perf_usd.get("currentTotalPosition", 0),
+                        "ingresos": ingresos_usd,
+                        "egresos": egresos_usd,
+                        "total_invertido": perf_usd.get("investedTotal", 0),
+                        "ganancia": perf_usd.get("earnings", 0),
+                    },
+                }
+            )
 
             print(f"✓ {month_key}")
 
@@ -185,7 +197,9 @@ def main():
     print("\n" + "=" * 100)
     print("MONTHLY PORTFOLIO EVOLUTION")
     print("=" * 100)
-    print(f"{'Mes':<10} {'Inicio ARS':>15} {'Ingr':>12} {'Egr':>12} {'Fin ARS':>15} {'G/L ARS':>12} | {'Fin USD':>12} {'G/L USD':>10}")
+    print(
+        f"{'Mes':<10} {'Inicio ARS':>15} {'Ingr':>12} {'Egr':>12} {'Fin ARS':>15} {'G/L ARS':>12} | {'Fin USD':>12} {'G/L USD':>10}"
+    )
     print("-" * 100)
 
     for r in results:
@@ -210,38 +224,42 @@ def main():
     csv_file = "portfolio_evolution.csv"
     with open(csv_file, "w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow([
-            "Mes",
-            "Inicio ARS",
-            "Ingresos ARS",
-            "Egresos ARS",
-            "Fin ARS",
-            "Total Invertido ARS",
-            "Ganancia ARS",
-            "Inicio USD",
-            "Ingresos USD",
-            "Egresos USD",
-            "Fin USD",
-            "Total Invertido USD",
-            "Ganancia USD",
-        ])
+        writer.writerow(
+            [
+                "Mes",
+                "Inicio ARS",
+                "Ingresos ARS",
+                "Egresos ARS",
+                "Fin ARS",
+                "Total Invertido ARS",
+                "Ganancia ARS",
+                "Inicio USD",
+                "Ingresos USD",
+                "Egresos USD",
+                "Fin USD",
+                "Total Invertido USD",
+                "Ganancia USD",
+            ]
+        )
 
         for r in results:
-            writer.writerow([
-                r["mes"],
-                r["ars"]["valor_inicio"],
-                r["ars"]["ingresos"],
-                r["ars"]["egresos"],
-                r["ars"]["valor_fin"],
-                r["ars"]["total_invertido"],
-                r["ars"]["ganancia"],
-                r["usd"]["valor_inicio"],
-                r["usd"]["ingresos"],
-                r["usd"]["egresos"],
-                r["usd"]["valor_fin"],
-                r["usd"]["total_invertido"],
-                r["usd"]["ganancia"],
-            ])
+            writer.writerow(
+                [
+                    r["mes"],
+                    r["ars"]["valor_inicio"],
+                    r["ars"]["ingresos"],
+                    r["ars"]["egresos"],
+                    r["ars"]["valor_fin"],
+                    r["ars"]["total_invertido"],
+                    r["ars"]["ganancia"],
+                    r["usd"]["valor_inicio"],
+                    r["usd"]["ingresos"],
+                    r["usd"]["egresos"],
+                    r["usd"]["valor_fin"],
+                    r["usd"]["total_invertido"],
+                    r["usd"]["ganancia"],
+                ]
+            )
 
     print(f"\n✅ Saved to {csv_file}")
 

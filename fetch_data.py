@@ -24,8 +24,7 @@ from src.connectors.sheets import get_sheets_client
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -111,7 +110,9 @@ def fetch_cer(since: date, until: date) -> dict[date, float]:
                     d = datetime.strptime(record["fecha"], "%Y-%m-%d").date()
                     results[d] = float(record["valor"])
                 except (ValueError, TypeError) as e:
-                    logger.warning(f"CER: invalid date or value in record {record}: {e}")
+                    logger.warning(
+                        f"CER: invalid date or value in record {record}: {e}"
+                    )
                     continue
 
             total = body.get("metadata", {}).get("resultset", {}).get("count", 0)
@@ -143,7 +144,7 @@ def fetch_ccl_ambito(since: date, until: date) -> dict[date, float]:
         data = resp.json()
 
         if not isinstance(data, list):
-            logger.error(f"CCL Ambito: unexpected response format (not a list)")
+            logger.error("CCL Ambito: unexpected response format (not a list)")
             return out
 
         for row in data[1:]:
@@ -215,8 +216,8 @@ def fetch_spy(since: date, until: date) -> dict[date, float]:
 
         # Convertir a dict[date, float] usando el precio de cierre
         for idx, row in df.iterrows():
-            d = idx.date() if hasattr(idx, 'date') else idx
-            out[d] = float(row['Close'])
+            d = idx.date() if hasattr(idx, "date") else idx
+            out[d] = float(row["Close"])
 
         logger.info(f"SPY: fetched {len(out)} days from {since} to {until}")
 
@@ -317,7 +318,9 @@ def download_and_parse_rem(url: str) -> list[float]:
                 try:
                     projections.append(float(val) / 100.0)
                 except (ValueError, TypeError) as e:
-                    logger.warning(f"REM: invalid projection value at row {row}: {val} ({e})")
+                    logger.warning(
+                        f"REM: invalid projection value at row {row}: {val} ({e})"
+                    )
                     projections.append(0.0)
             else:
                 projections.append(0.0)
@@ -377,7 +380,9 @@ def get_last_rem_date_from_sheet() -> tuple[int, int]:
         client = get_sheets_client()
         ss = client.open_by_key(SPREADSHEET_ID)
         ws_r = ss.worksheet(REM_SHEET)
-        existing_rows = ws_r.get_all_values()[3:]  # Skip metadata and headers (rows 1-3)
+        existing_rows = ws_r.get_all_values()[
+            3:
+        ]  # Skip metadata and headers (rows 1-3)
 
         dates = []
         for row in existing_rows:
@@ -452,7 +457,9 @@ def update_sheets(cer_data, ccl_data, spy_data, rem_reports):
         sorted_dates = sorted(
             data_map.keys(), key=lambda x: datetime.strptime(x, "%d/%m/%Y")
         )
-        payload = [[d, data_map[d][0], data_map[d][1], data_map[d][2]] for d in sorted_dates]
+        payload = [
+            [d, data_map[d][0], data_map[d][1], data_map[d][2]] for d in sorted_dates
+        ]
 
         ws_h.update(
             range_name=f"A{FIRST_DATA_ROW}:D{FIRST_DATA_ROW + len(payload) - 1}",
@@ -465,7 +472,9 @@ def update_sheets(cer_data, ccl_data, spy_data, rem_reports):
 
         # Update "Última Actualización" timestamp
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
-        ws_r.update(range_name="B1", values=[[timestamp]], value_input_option="USER_ENTERED")
+        ws_r.update(
+            range_name="B1", values=[[timestamp]], value_input_option="USER_ENTERED"
+        )
 
         # Get existing data to find last row
         existing_rem = ws_r.get_all_values()[3:]  # Skip rows 1-3 (metadata + headers)
