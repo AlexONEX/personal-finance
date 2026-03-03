@@ -4,12 +4,12 @@ Este documento describe todas las columnas de la hoja de cálculo "Ingresos".
 
 ## 1. PERIODO
 
-*   **A - Periodo Abonado**: Mes al que corresponde el sueldo (mmm-yy).
+*   **A - Periodo Abonado**: Mes al que corresponde el sueldo (auto-generado desde columna B).
 
 ## 2. SUELDO
 
-*   **B - Fecha**: Fecha real de cobro (dd/mm/yyyy).
-*   **C - Bruto**: Sueldo bruto mensual (input manual).
+*   **B - Fecha**: Fecha real de cobro (dd/mm/yyyy) - INPUT MANUAL.
+*   **C - Bruto**: Sueldo bruto mensual - INPUT MANUAL.
 *   **D - Jubilación**: Descuento automático (11% del bruto).
 *   **E - PAMI**: Descuento automático (3% del bruto).
 *   **F - Obra Social**: Descuento automático (3% del bruto).
@@ -17,17 +17,17 @@ Este documento describe todas las columnas de la hoja de cálculo "Ingresos".
 
 ## 3. AGUINALDO
 
-*   **H - SAC Bruto**: Monto del aguinaldo bruto (input manual).
+*   **H - SAC Bruto**: Monto del aguinaldo bruto - INPUT MANUAL.
 *   **I - SAC Neto**: Aguinaldo con descuentos aplicados.
 
 ## 4. BONOS
 
-*   **J - Bono Neto**: Bonos extraordinarios recibidos (input manual).
+*   **J - Bono Neto**: Bonos extraordinarios recibidos - INPUT MANUAL.
 
 ## 5. BENEFICIOS
 
-*   **K - Comida**: Beneficio de comida (input manual).
-*   **L - Otros Beneficios**: Otros beneficios monetarios (input manual).
+*   **K - Tarjeta Corporativa**: Beneficio de tarjeta corporativa - INPUT MANUAL.
+*   **L - Otros Beneficios**: Otros beneficios monetarios - INPUT MANUAL.
 
 ## 6. TOTAL
 
@@ -40,34 +40,35 @@ Este documento describe todas las columnas de la hoja de cálculo "Ingresos".
 *   **P - CER Base**: Valor del CER al momento del último aumento.
 *   **Q - Paridad CER (Bruto)**: Sueldo bruto necesario hoy para empatar la inflación acumulada.
 *   **R - Paridad CER (Neto)**: Sueldo neto necesario hoy para empatar la inflación acumulada.
-*   **S - Poder Adq. vs Aumento**: Poder adquisitivo acumulado desde el último aumento.
+*   **S - Poder Adq (Neto). vs Aumento**: Poder adquisitivo acumulado desde el último aumento.
 
 ## 8. INFLACIÓN (CER)
 
-*   **T - Δ% CER MoM**: Acumulación CER desde 30 días antes de la fecha de pago.
-*   **U - Poder Adquisitivo MoM**: Diferencia real entre el aumento de sueldo y la inflación del mes.
+*   **T - Δ% CER MoM**: Variación CER mensual (30 días).
+*   **U - Δ% Salario vs Cer**: Poder adquisitivo MoM (mes vs mes anterior).
+*   **V - Δ% Salario vs Cer Acum**: Poder adquisitivo acumulado desde el primer sueldo (B3).
 
 ## 9. PROYECCION REM (Expectativas de Mercado)
 
-*   **V - REM 3m (%)**: Inflación proyectada por el BCRA para los próximos 3 meses.
-*   **W - Objetivo 3m Bruto**: Sueldo bruto objetivo para dentro de 3 meses.
-*   **X - Objetivo 3m Neto**: Sueldo neto objetivo para dentro de 3 meses.
-*   **Y - REM 6m (%)**: Inflación proyectada para los próximos 6 meses.
-*   **Z - Objetivo 6m Bruto**: Sueldo bruto objetivo para dentro de 6 meses.
-*   **AA - Objetivo 6m Neto**: Sueldo neto objetivo para dentro de 6 meses.
+*   **W - REM 3m (%)**: Inflación proyectada por el BCRA para los próximos 3 meses.
+*   **X - Objetivo 3m Bruto**: Sueldo bruto objetivo para dentro de 3 meses.
+*   **Y - Objetivo 3m Neto**: Sueldo neto objetivo para dentro de 3 meses.
+*   **Z - REM 6m (%)**: Inflación proyectada para los próximos 6 meses.
+*   **AA - Objetivo 6m Bruto**: Sueldo bruto objetivo para dentro de 6 meses.
+*   **AB - Objetivo 6m Neto**: Sueldo neto objetivo para dentro de 6 meses.
 
 ## 10. DÓLAR
 
-*   **AB - CCL**: Cotización del dólar CCL al cierre de mes.
-*   **AC - Δ % CCL MoM**: Variación mensual del dólar.
-*   **AD - Sueldo USD Bruto**: Sueldo bruto en dólares CCL.
-*   **AE - Sueldo USD Neto**: Sueldo neto en dólares CCL.
+*   **AC - CCL**: Cotización del dólar CCL al cierre de mes.
+*   **AD - Δ % CCL MoM**: Variación mensual del dólar.
+*   **AE - Sueldo USD Bruto**: Sueldo bruto en dólares CCL.
+*   **AF - Sueldo USD Neto**: Sueldo neto en dólares CCL.
 
 ## 11. VS ÚLTIMO AUMENTO USD
 
-*   **AF - CCL Base**: CCL al momento del último aumento.
-*   **AG - Sueldo USD Bruto Base**: Sueldo bruto USD al momento del aumento.
-*   **AH - Sueldo USD Neto Base**: Sueldo neto USD al momento del aumento.
-*   **AI - Paridad USD (Bruto)**: Sueldo en ARS para recuperar Bruto USD del aumento.
-*   **AJ - Paridad USD (Neto)**: Sueldo en ARS para recuperar Neto USD del aumento.
-*   **AK - Atraso USD**: Variación real en USD respecto al último aumento.
+*   **AG - CCL Base**: CCL al momento del último aumento.
+*   **AH - Sueldo USD Bruto Base**: Sueldo bruto USD al momento del aumento.
+*   **AI - Sueldo USD Neto Base**: Sueldo neto USD al momento del aumento.
+*   **AJ - Paridad USD (Bruto)**: Sueldo en ARS para recuperar Bruto USD del aumento.
+*   **AK - Paridad USD (Neto)**: Sueldo en ARS para recuperar Neto USD del aumento.
+*   **AL - Atraso USD**: Variación real en USD respecto al último aumento.
