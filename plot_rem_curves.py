@@ -58,7 +58,6 @@ def fetch_rem_curves():
     ws = ss.worksheet(SHEETS["REM"])
 
     data = ws.get_all_values()
-    headers = data[2]
     rows = data[3:]
 
     # Columnas: Mes Reporte, M, M+1, M+2, M+3, M+4, M+5, M+6, Próx. 12m
