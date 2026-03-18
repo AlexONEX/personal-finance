@@ -1,5 +1,7 @@
 """Estructura OPTIMIZADA de la sheet Ingresos - Feb 2026."""
 
+from src.config import TAX_RATES
+
 INCOME_GROUPS = [
     ("A", "A", "PERIODO"),
     ("B", "G", "SUELDO"),
@@ -238,10 +240,10 @@ COLUMN_DESCRIPTIONS = {
 }
 
 IMPUESTOS_ROWS = [
-    ("Jubilacion", 0.11, "Ley 24241"),
-    ("PAMI", 0.03, "Ley 19032"),
-    ("Obra Social", 0.03, "Ley 23660"),
-    ("Otro", 0.00, "—"),
+    ("Jubilacion", TAX_RATES["jubilacion"]["rate"], TAX_RATES["jubilacion"]["law"]),
+    ("PAMI", TAX_RATES["pami"]["rate"], TAX_RATES["pami"]["law"]),
+    ("Obra Social", TAX_RATES["obra_social"]["rate"], TAX_RATES["obra_social"]["law"]),
+    ("Otro", TAX_RATES["otro"]["rate"], TAX_RATES["otro"]["law"]),
 ]
 
 HISTORIC_VARIABLES = [
