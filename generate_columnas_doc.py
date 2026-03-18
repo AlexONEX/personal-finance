@@ -32,9 +32,7 @@ def generate_columnas_md():
     # Header
     lines.append("# Diccionario de Columnas - Sheet Ingresos")
     lines.append("")
-    lines.append(
-        "**Generado automáticamente desde `src/sheets/structure.py`**"
-    )
+    lines.append("**Generado automáticamente desde `src/sheets/structure.py`**")
     lines.append("")
     lines.append("## Grupos de Columnas")
     lines.append("")
@@ -71,12 +69,16 @@ def generate_columnas_md():
                     lines.append("**Fórmula:**")
                     lines.append("```excel")
                     # Mostrar fórmula sin placeholders
-                    lines.append(formula.replace("{r}", "ROW").replace("{r-1}", "ROW-1"))
+                    lines.append(
+                        formula.replace("{r}", "ROW").replace("{r-1}", "ROW-1")
+                    )
                     lines.append("```")
                     lines.append("")
 
                 if fmt:
-                    lines.append(f"**Formato:** {fmt.get('type')} - `{fmt.get('pattern')}`")
+                    lines.append(
+                        f"**Formato:** {fmt.get('type')} - `{fmt.get('pattern')}`"
+                    )
                     lines.append("")
 
                 # Manual input o auto-calculado
@@ -112,7 +114,7 @@ def generate_columnas_md():
     lines.append("|----------|------|-----|")
 
     for name, rate, ley in IMPUESTOS_ROWS:
-        lines.append(f"| {name} | {rate*100:.0f}% | {ley} |")
+        lines.append(f"| {name} | {rate * 100:.0f}% | {ley} |")
 
     lines.append("")
 

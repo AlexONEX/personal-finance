@@ -16,7 +16,6 @@ import os
 from datetime import datetime
 
 import matplotlib.pyplot as plt
-import numpy as np
 from dotenv import load_dotenv
 
 from src.config import MONTHS_MAP_SHORT, SHEETS
@@ -87,7 +86,7 @@ def fetch_rem_curves():
             seen_months[mes_reporte] = {
                 "fecha": fecha,
                 "mes": mes_reporte,
-                "proyecciones": proyecciones
+                "proyecciones": proyecciones,
             }
 
     # Convertir dict a lista y ordenar
@@ -114,18 +113,18 @@ def plot_rem_curves(data, recent_months=None, save_path=None, custom_title=None)
 
     # Paleta de colores primarios y secundarios bien diferenciados
     color_palette = [
-        '#1f77b4',  # Azul
-        '#ff7f0e',  # Naranja
-        '#2ca02c',  # Verde
-        '#d62728',  # Rojo oscuro
-        '#9467bd',  # Púrpura
-        '#8c564b',  # Marrón
-        '#e377c2',  # Rosa
-        '#7f7f7f',  # Gris
-        '#bcbd22',  # Verde lima
-        '#17becf',  # Cyan
-        '#aec7e8',  # Azul claro
-        '#ffbb78',  # Naranja claro
+        "#1f77b4",  # Azul
+        "#ff7f0e",  # Naranja
+        "#2ca02c",  # Verde
+        "#d62728",  # Rojo oscuro
+        "#9467bd",  # Púrpura
+        "#8c564b",  # Marrón
+        "#e377c2",  # Rosa
+        "#7f7f7f",  # Gris
+        "#bcbd22",  # Verde lima
+        "#17becf",  # Cyan
+        "#aec7e8",  # Azul claro
+        "#ffbb78",  # Naranja claro
     ]
 
     n_curves = len(data)
@@ -154,43 +153,47 @@ def plot_rem_curves(data, recent_months=None, save_path=None, custom_title=None)
             ax.plot(
                 x_positions,
                 proyecciones,
-                marker='o',
+                marker="o",
                 markersize=markersize,
                 linewidth=linewidth,
                 color=color,
                 alpha=alpha,
                 zorder=zorder,
-                label=mes
+                label=mes,
             )
 
     # Formateo
-    ax.set_xlabel("Horizonte Temporal", fontsize=13, fontweight='bold')
-    ax.set_ylabel("Inflación Esperada (%)", fontsize=13, fontweight='bold')
+    ax.set_xlabel("Horizonte Temporal", fontsize=13, fontweight="bold")
+    ax.set_ylabel("Inflación Esperada (%)", fontsize=13, fontweight="bold")
 
-    title = custom_title if custom_title else (
-        f"Curvas de Expectativas de Inflación REM\n"
-        f"Evolución: {data[0]['mes']} → {data[-1]['mes']} ({len(data)} meses)"
+    title = (
+        custom_title
+        if custom_title
+        else (
+            f"Curvas de Expectativas de Inflación REM\n"
+            f"Evolución: {data[0]['mes']} → {data[-1]['mes']} ({len(data)} meses)"
+        )
     )
-    ax.set_title(title, fontsize=15, fontweight='bold', pad=20)
+    ax.set_title(title, fontsize=15, fontweight="bold", pad=20)
     ax.set_xticks(x_positions)
     ax.set_xticklabels(horizons, fontsize=11)
-    ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.8)
+    ax.grid(True, alpha=0.3, linestyle="--", linewidth=0.8)
 
     # Leyenda arriba fuera del gráfico
     ax.legend(
-        loc='upper center',
+        loc="upper center",
         bbox_to_anchor=(0.5, -0.08),
         ncol=min(6, len(data)),
         fontsize=10,
         frameon=True,
         fancybox=True,
-        shadow=True
+        shadow=True,
     )
 
     plt.tight_layout()
 
     if save_path:
-        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.savefig(save_path, dpi=300, bbox_inches="tight")
         print(f"Gráfico guardado en: {save_path}")
     else:
         plt.show()
@@ -208,38 +211,46 @@ def plot_rem_evolution_by_horizon(data, save_path=None):
     # Crear figura
     fig, ax = plt.subplots(figsize=(14, 8))
 
-    colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE']
+    colors = [
+        "#FF6B6B",
+        "#4ECDC4",
+        "#45B7D1",
+        "#FFA07A",
+        "#98D8C8",
+        "#F7DC6F",
+        "#BB8FCE",
+    ]
 
     for idx, horizon in enumerate(horizons):
         values = [d["proyecciones"][idx] for d in data]
         ax.plot(
             fechas,
             values,
-            marker='o',
+            marker="o",
             markersize=3,
             linewidth=2,
             color=colors[idx],
             label=horizon,
-            alpha=0.8
+            alpha=0.8,
         )
 
-    ax.set_xlabel("Fecha del Reporte REM", fontsize=12, fontweight='bold')
-    ax.set_ylabel("Inflación Esperada (%)", fontsize=12, fontweight='bold')
+    ax.set_xlabel("Fecha del Reporte REM", fontsize=12, fontweight="bold")
+    ax.set_ylabel("Inflación Esperada (%)", fontsize=12, fontweight="bold")
     ax.set_title(
         "Evolución de Expectativas por Horizonte Temporal\n"
         "¿Cómo cambió la expectativa para cada horizonte mes a mes?",
         fontsize=14,
-        fontweight='bold',
-        pad=20
+        fontweight="bold",
+        pad=20,
     )
-    ax.grid(True, alpha=0.3, linestyle='--')
-    ax.legend(loc='best', fontsize=10)
+    ax.grid(True, alpha=0.3, linestyle="--")
+    ax.legend(loc="best", fontsize=10)
 
-    plt.xticks(rotation=45, ha='right')
+    plt.xticks(rotation=45, ha="right")
     plt.tight_layout()
 
     if save_path:
-        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.savefig(save_path, dpi=300, bbox_inches="tight")
         print(f"Gráfico guardado en: {save_path}")
     else:
         plt.show()
@@ -262,29 +273,32 @@ Ejemplos:
 
   # Todos los meses desde 2022
   %(prog)s --output rem_all.png
-        """
+        """,
     )
     parser.add_argument(
-        "-o", "--output", "--save",
+        "-o",
+        "--output",
+        "--save",
         type=str,
         dest="output",
-        help="Guardar gráfico en archivo (ej: rem_curves.png)"
+        help="Guardar gráfico en archivo (ej: rem_curves.png)",
     )
     parser.add_argument(
-        "-m", "--months", "--recent",
+        "-m",
+        "--months",
+        "--recent",
         type=int,
         dest="months",
-        help="Mostrar solo últimos N meses (default: todos)"
+        help="Mostrar solo últimos N meses (default: todos)",
     )
     parser.add_argument(
-        "-e", "--evolution",
+        "-e",
+        "--evolution",
         action="store_true",
-        help="Plotear evolución por horizonte en lugar de curvas"
+        help="Plotear evolución por horizonte en lugar de curvas",
     )
     parser.add_argument(
-        "-t", "--title",
-        type=str,
-        help="Título customizado para el gráfico"
+        "-t", "--title", type=str, help="Título customizado para el gráfico"
     )
     args = parser.parse_args()
 
@@ -305,7 +319,7 @@ Ejemplos:
                 data,
                 recent_months=args.months,
                 save_path=args.output,
-                custom_title=args.title
+                custom_title=args.title,
             )
     else:
         print("No se encontraron datos REM")

@@ -38,9 +38,7 @@ def get_or_create_worksheet(
         return ss.add_worksheet(title=title, rows=rows, cols=cols)
 
 
-def apply_formatting(
-    ss: gspread.Spreadsheet, sheet_id: int, requests: list
-) -> None:
+def apply_formatting(ss: gspread.Spreadsheet, sheet_id: int, requests: list) -> None:
     """Aplica formateo batch a una sheet.
 
     Args:

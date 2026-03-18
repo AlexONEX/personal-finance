@@ -6,7 +6,6 @@ para extraer proyecciones de inflación.
 
 import io
 import logging
-from datetime import date
 
 import openpyxl
 import requests
@@ -134,9 +133,7 @@ class REMFetcher:
     def _download_and_parse_excel(self, url: str) -> list[float]:
         """Descarga y parsea archivo Excel de proyecciones REM."""
         try:
-            r = requests.get(
-                url, timeout=FETCH_CONFIG["timeout_seconds"], verify=False
-            )
+            r = requests.get(url, timeout=FETCH_CONFIG["timeout_seconds"], verify=False)
             r.raise_for_status()
 
             wb = openpyxl.load_workbook(io.BytesIO(r.content), data_only=True)

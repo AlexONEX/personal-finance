@@ -2,7 +2,7 @@
 
 import gspread
 
-from src.config import COLORS, SHEET_LIMITS, SHEETS, get_color, lighten_color
+from src.config import SHEET_LIMITS, SHEETS, get_color, lighten_color
 from src.setup.utils import apply_formatting, col_idx, get_or_create_worksheet
 from src.sheets.structure import COLUMN_FORMATS, INCOME_COLUMNS, INCOME_GROUPS
 
