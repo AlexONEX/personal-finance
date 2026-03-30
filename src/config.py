@@ -17,6 +17,9 @@ SHEETS = {
     "IMPUESTOS": "impuestos",
     "PANEL": "Panel",
     "INVERSIONES": "Inversiones",
+    "ANALISIS_ARS": "Análisis ARS",
+    "ANALISIS_USD": "Análisis USD",
+    "DASHBOARD": "Dashboard",
 }
 
 # =============================================================================
@@ -57,6 +60,19 @@ COLORS = {
     "PROYECCION REM": {"red": 0.8, "green": 1.0, "blue": 1.0},
     "DÓLAR": {"red": 0.8, "green": 0.898, "blue": 0.898},
     "VS ÚLTIMO AUMENTO USD": {"red": 0.988, "green": 0.898, "blue": 0.804},
+    # Grupos de Análisis ARS
+    "PERIODO": {"red": 0.85, "green": 0.85, "blue": 0.85},
+    "VS ÚLTIMO AUMENTO (CER)": {"red": 1.0, "green": 0.8, "blue": 0.8},
+    "VS ÚLTIMO AUMENTO (REM)": {"red": 0.8, "green": 1.0, "blue": 1.0},
+    "VARIACIÓN MENSUAL": {"red": 1.0, "green": 1.0, "blue": 0.8},
+    "PROYECCIÓN REM": {"red": 0.8, "green": 1.0, "blue": 1.0},
+    # Grupos de Análisis USD
+    "SUELDO ARS": {"red": 0.8, "green": 0.898, "blue": 1.0},
+    "SUELDO USD NOMINAL": {"red": 0.898, "green": 1.0, "blue": 0.898},
+    "SUELDO USD REAL": {"red": 1.0, "green": 0.898, "blue": 0.8},
+    "VS ÚLTIMO AUMENTO": {"red": 0.988, "green": 0.898, "blue": 0.804},
+    # Grupo Valor/Hora en Ingresos
+    "VALOR/HORA": {"red": 0.8, "green": 0.9, "blue": 0.8},
     # Colores base para headers
     "header_bg": {"red": 0.2, "green": 0.3, "blue": 0.4},
     "header_fg": {"red": 1.0, "green": 1.0, "blue": 1.0},
