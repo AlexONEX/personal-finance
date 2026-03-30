@@ -9,7 +9,7 @@ import logging
 import os
 import urllib3
 from concurrent.futures import ThreadPoolExecutor
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from dotenv import load_dotenv
 
@@ -162,8 +162,22 @@ def update_sheets(cer_data, ccl_data, spy_data, rem_reports):
             range_name="B1", values=[[timestamp]], value_input_option="USER_ENTERED"
         )
 
-        existing_rem = ws_r.get_all_values()[3:]  # Skip rows 1-3
-        existing_months = {row[0] for row in existing_rem if len(row) >= 1 and row[0]}
+        # Get raw values (dates as serial numbers) to compare correctly
+        existing_rem_raw = ws_r.get("A4:I", value_render_option="UNFORMATTED_VALUE")
+        existing_rem_raw = existing_rem_raw if existing_rem_raw else []
+
+        # Convert serial dates to "YYYY-MM-DD" for comparison
+        # Google Sheets epoch is 1899-12-30
+        existing_months = set()
+        for row in existing_rem_raw:
+            if len(row) >= 1 and row[0]:
+                val = row[0]
+                if isinstance(val, (int, float)):
+                    # Convert serial to date
+                    d = date(1899, 12, 30) + timedelta(days=int(val))
+                    existing_months.add(d.strftime("%Y-%m-%d"))
+                elif isinstance(val, str):
+                    existing_months.add(val)
 
         new_reports = {
             month: projs
@@ -172,7 +186,11 @@ def update_sheets(cer_data, ccl_data, spy_data, rem_reports):
         }
 
         if new_reports:
-            next_row = 4 + len(existing_rem)
+            # Count only rows with actual data (non-empty column A)
+            rows_with_data = sum(
+                1 for row in existing_rem_raw if len(row) >= 1 and row[0]
+            )
+            next_row = 4 + rows_with_data
             sorted_new_months = sorted(new_reports.keys())
             payload = [[m] + new_reports[m] for m in sorted_new_months]
 

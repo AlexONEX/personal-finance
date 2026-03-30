@@ -8,6 +8,8 @@ Para cada mes calcula:
 - Valor fin mes
 - Total invertido acumulado
 - Ganancia/pérdida
+
+Escribe los datos en la tab Inversiones del Google Sheet.
 """
 
 import os
@@ -17,7 +19,12 @@ from calendar import monthrange
 import requests
 from dotenv import load_dotenv
 
+from src.connectors.sheets import get_sheets_client
+from src.config import SHEETS
+
 load_dotenv()
+
+SPREADSHEET_ID = os.environ.get("SPREADSHEET_ID")
 
 IEB_ACCOUNT_ID = os.environ.get("IEB_ACCOUNT_ID", "26935110")
 IEB_USER_AGENT = os.environ.get("IEB_USER_AGENT")
@@ -105,6 +112,48 @@ def get_month_range(year: int, month: int, start_date: date) -> tuple[date, date
         from_date = first_day
 
     return from_date, last_day
+
+
+def write_to_sheets(results: list[dict]) -> None:
+    """Escribe los resultados en la tab Inversiones del Google Sheet."""
+    print("\nWriting to Google Sheets...")
+
+    client = get_sheets_client()
+    ss = client.open_by_key(SPREADSHEET_ID)
+    ws = ss.worksheet(SHEETS["INVERSIONES"])
+
+    # Mapear datos al formato de la sheet
+    # Columnas: A=Mes, B=Ingreso ARS, C=Egreso ARS, D=Valor Inicio ARS, E=Valor Fin ARS,
+    #           F=Ingreso USD, G=Egreso USD, H=Valor Inicio USD, I=Valor Fin USD,
+    #           J=Ganancia ARS, K=Ganancia USD
+    payload = []
+    for r in results:
+        ars = r["ars"]
+        usd = r["usd"]
+        payload.append([
+            r["mes"],           # A: Mes
+            ars["ingresos"],    # B: Ingreso ARS
+            ars["egresos"],     # C: Egreso ARS
+            ars["valor_inicio"],# D: Valor Inicio ARS
+            ars["valor_fin"],   # E: Valor Fin ARS
+            usd["ingresos"],    # F: Ingreso USD
+            usd["egresos"],     # G: Egreso USD
+            usd["valor_inicio"],# H: Valor Inicio USD
+            usd["valor_fin"],   # I: Valor Fin USD
+            ars["ganancia"],    # J: Ganancia ARS
+            usd["ganancia"],    # K: Ganancia USD
+        ])
+
+    # Escribir desde fila 3 (después de headers en filas 1-2)
+    start_row = 3
+    end_row = start_row + len(payload) - 1
+    ws.update(
+        range_name=f"A{start_row}:K{end_row}",
+        values=payload,
+        value_input_option="USER_ENTERED",
+    )
+
+    print(f"✅ Written {len(payload)} rows to Inversiones sheet")
 
 
 def main():
@@ -262,6 +311,9 @@ def main():
             )
 
     print(f"\n✅ Saved to {csv_file}")
+
+    # Write to Google Sheets
+    write_to_sheets(results)
 
 
 if __name__ == "__main__":
