@@ -10,6 +10,8 @@ from dotenv import load_dotenv
 
 from src.connectors.sheets import get_sheets_client
 from src.setup import (
+    setup_analisis_ars,
+    setup_analisis_usd,
     setup_historic,
     setup_impuestos,
     setup_ingresos,
@@ -37,6 +39,8 @@ def main():
     setup_rem(ss)
     setup_ingresos(ss)
     setup_inversiones(ss)
+    setup_analisis_ars(ss)
+    setup_analisis_usd(ss)
 
     print(
         f"\nSetup completo: https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit"
