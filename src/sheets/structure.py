@@ -344,3 +344,77 @@ HISTORIC_VARIABLES = [
     ("IOL/dolarapi", "CCL", "CCL"),
     ("yfinance", "SPY", "SPY"),
 ]
+
+# =============================================================================
+# DASHBOARD - Métricas para negociación salarial
+# =============================================================================
+
+DASHBOARD_SECTIONS = [
+    ("RESUMEN EJECUTIVO", 2, 6),
+    ("PODER ADQUISITIVO", 8, 12),
+    ("COMPARATIVAS", 14, 18),
+    ("ÚLTIMO MES", 20, 24),
+    ("TARGETS/OBJETIVOS", 26, 30),
+]
+
+DASHBOARD_ROWS = [
+    # RESUMEN EJECUTIVO (rows 2-6)
+    (2, "A", "Métrica", None),
+    (2, "B", "Valor", None),
+    (2, "C", "Estado", None),
+    (3, "A", "Pérdida vs CER desde último ascenso", None),
+    (3, "B", '=IFERROR(INDEX(\'Análisis ARS\'!J:J, MATCH(2, 1/(\'Análisis ARS\'!B:B<>""), -1)), "-")', None),
+    (3, "C", '=IF(B3="-", "-", IF(B3<-0.1, "🔴", IF(B3<-0.05, "🟡", "🟢")))', None),
+    (4, "A", "Meses desde último ascenso", None),
+    (4, "B", '=IFERROR(DATEDIF(INDEX(FILTER(Ingresos!B:B, Ingresos!Q:Q=TRUE), COUNTA(FILTER(Ingresos!B:B, Ingresos!Q:Q=TRUE))), TODAY(), "M"), "-")', None),
+    (5, "A", "Aumento necesario para empatar CER (%)", None),
+    (5, "B", '=IF(B3="-", "-", IFERROR(1/(1+B3)-1, "-"))', None),
+
+    # PODER ADQUISITIVO (rows 8-12)
+    (8, "A", "Métrica", None),
+    (8, "B", "Valor", None),
+    (9, "A", "Neto/Hora actual", None),
+    (9, "B", '=IFERROR(INDEX(\'Análisis ARS\'!D:D, MATCH(2, 1/(\'Análisis ARS\'!B:B<>""), -1)), "-")', None),
+    (10, "A", "Neto/Hora ajustado por CER (debería ser)", None),
+    (10, "B", '=IFERROR(INDEX(\'Análisis ARS\'!I:I, MATCH(2, 1/(\'Análisis ARS\'!B:B<>""), -1)), "-")', None),
+    (11, "A", "Brecha salarial ($/hora)", None),
+    (11, "B", '=IF(OR(B9="-", B10="-"), "-", B9-B10)', None),
+    (12, "A", "Brecha salarial (%)", None),
+    (12, "B", '=IF(OR(B9="-", B10="-"), "-", (B9/B10)-1)', None),
+
+    # COMPARATIVAS (rows 14-18)
+    (14, "A", "Comparativa", None),
+    (14, "B", "Pérdida %", None),
+    (14, "C", "Debería ganar", None),
+    (15, "A", "vs CER acumulado", None),
+    (15, "B", '=B3', None),
+    (15, "C", '=IF(B9="-", "-", B9/(1+B3))', None),
+    (16, "A", "vs REM proyectado", None),
+    (16, "B", '=IFERROR(INDEX(\'Análisis ARS\'!L:L, MATCH(2, 1/(\'Análisis ARS\'!B:B<>""), -1)), "-")', None),
+    (16, "C", '=IF(OR(B9="-", B16="-"), "-", B9/(1+B16))', None),
+    (17, "A", "vs USD (CCL)", None),
+    (17, "B", '=IFERROR(INDEX(\'Análisis USD\'!R:R, MATCH(2, 1/(\'Análisis USD\'!B:B<>""), -1)), "-")', None),
+    (17, "C", '=IF(OR(B9="-", B17="-"), "-", B9/(1+B17))', None),
+
+    # ÚLTIMO MES (rows 20-24)
+    (20, "A", "Métrica", None),
+    (20, "B", "Valor", None),
+    (21, "A", "Inflación CER último mes", None),
+    (21, "B", '=IFERROR(INDEX(\'Análisis ARS\'!M:M, MATCH(2, 1/(\'Análisis ARS\'!B:B<>""), -1)), "-")', None),
+    (22, "A", "Cambio $/Hora vs CER acumulado", None),
+    (22, "B", '=IFERROR(INDEX(\'Análisis ARS\'!N:N, MATCH(2, 1/(\'Análisis ARS\'!B:B<>""), -1)), "-")', None),
+    (23, "A", "Tendencia últimos 3 meses", None),
+    (23, "B", '=IF(B22="-", "-", IF(B22<-0.05, "📉 Perdiendo", IF(B22<0.05, "➡️ Estable", "📈 Ganando")))', None),
+
+    # TARGETS/OBJETIVOS (rows 26-30)
+    (26, "A", "Objetivo", None),
+    (26, "B", "Valor", None),
+    (27, "A", "Aumento mínimo para empatar CER", None),
+    (27, "B", '=B5', None),
+    (28, "A", "Objetivo REM 3 meses", None),
+    (28, "B", '=IFERROR(INDEX(\'Análisis ARS\'!P:P, MATCH(2, 1/(\'Análisis ARS\'!B:B<>""), -1)), "-")', None),
+    (29, "A", "Objetivo REM 6 meses", None),
+    (29, "B", '=IFERROR(INDEX(\'Análisis ARS\'!S:S, MATCH(2, 1/(\'Análisis ARS\'!B:B<>""), -1)), "-")', None),
+    (30, "A", "Nuevo sueldo objetivo (Neto/Hora CER)", None),
+    (30, "B", '=B10', None),
+]
