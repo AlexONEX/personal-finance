@@ -234,8 +234,10 @@ def main():
     else:
         since_dt = get_last_date_from_sheet()
 
-    until_dt = date.today()
-    print(f"Updating dataset from {since_dt} to {until_dt}...")
+    today = date.today()
+    until_dt_future = today + timedelta(days=45)
+    
+    print(f"Updating dataset from {since_dt} to {today} (CER until {until_dt_future})...")
 
     # Crear instancias de fetchers
     cer_fetcher = CERFetcher()
@@ -246,9 +248,9 @@ def main():
     with ThreadPoolExecutor(
         max_workers=FETCH_CONFIG["max_workers_parallel"]
     ) as executor:
-        future_cer = executor.submit(cer_fetcher.fetch, since_dt, until_dt)
-        future_ccl = executor.submit(ccl_fetcher.fetch, since_dt, until_dt)
-        future_spy = executor.submit(spy_fetcher.fetch, since_dt, until_dt)
+        future_cer = executor.submit(cer_fetcher.fetch, since_dt, until_dt_future)
+        future_ccl = executor.submit(ccl_fetcher.fetch, since_dt, today)
+        future_spy = executor.submit(spy_fetcher.fetch, since_dt, today)
 
         cer = future_cer.result()
         ccl = future_ccl.result()

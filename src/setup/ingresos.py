@@ -36,13 +36,20 @@ def setup_ingresos(ss: gspread.Spreadsheet) -> None:
     for col_let, title, *rest in INCOME_COLUMNS:
         if len(rest) > 0 and rest[0]:
             formula_template = rest[0]
-            col_payload = [
-                [formula_template.replace("{r}", str(r)).replace("{r-1}", str(r - 1))]
-                for r in range(3, max_rows + 1)
-            ]
-            formula_updates.append(
-                {"range": f"{col_let}3:{col_let}{max_rows}", "values": col_payload}
-            )
+            # Si la fórmula es ARRAYFORMULA, solo va en la fila 3
+            if "ARRAYFORMULA" in formula_template:
+                formula_updates.append(
+                    {"range": f"{col_let}3:{col_let}3", "values": [[formula_template]]}
+                )
+            else:
+                # Fórmulas normales se repiten en cada fila
+                col_payload = [
+                    [formula_template.replace("{r}", str(r)).replace("{r-1}", str(r - 1))]
+                    for r in range(3, max_rows + 1)
+                ]
+                formula_updates.append(
+                    {"range": f"{col_let}3:{col_let}{max_rows}", "values": col_payload}
+                )
 
     if formula_updates:
         ws.batch_update(formula_updates, value_input_option="USER_ENTERED")

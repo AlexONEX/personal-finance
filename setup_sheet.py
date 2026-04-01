@@ -25,7 +25,7 @@ load_dotenv()
 SPREADSHEET_ID = os.environ.get("SPREADSHEET_ID")
 
 
-def main():
+def setup_all():
     """Ejecuta el setup completo de todas las hojas."""
     if not SPREADSHEET_ID:
         print("ERROR: SPREADSHEET_ID no definido en .env")
@@ -50,4 +50,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    setup_all()

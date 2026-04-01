@@ -35,17 +35,16 @@ def setup_analisis_usd(ss: gspread.Spreadsheet) -> None:
         header_row[col_idx(col_let)] = title
     ws.update(range_name="A2:T2", values=[header_row])
 
-    # Batch update de fórmulas
+    print(f"Limpiando fórmulas viejas en {sheet_name}...")
+    ws.batch_clear([f"A3:T{max_rows}"])
+
+    # Batch update de fórmulas (una sola por columna en la fila 3)
     formula_updates = []
     for col_let, title, *rest in ANALISIS_USD_COLUMNS:
         if len(rest) > 0 and rest[0]:
-            formula_template = rest[0]
-            col_payload = [
-                [formula_template.replace("{r}", str(r)).replace("{r-1}", str(r - 1))]
-                for r in range(3, max_rows + 1)
-            ]
+            formula = rest[0]
             formula_updates.append(
-                {"range": f"{col_let}3:{col_let}{max_rows}", "values": col_payload}
+                {"range": f"{col_let}3:{col_let}3", "values": [[formula]]}
             )
 
     if formula_updates:
