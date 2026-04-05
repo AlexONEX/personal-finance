@@ -172,7 +172,7 @@ def setup_analisis_ars_v2(ss: gspread.Spreadsheet) -> None:
             "updateSheetProperties": {
                 "properties": {
                     "sheetId": ws.id,
-                    "gridProperties": {"frozenRowCount": 2, "frozenColumnCount": 1},
+                    "gridProperties": {"frozenRowCount": 2, "frozenColumnCount": 2},
                 },
                 "fields": "gridProperties.frozenRowCount,gridProperties.frozenColumnCount",
             }
@@ -388,7 +388,7 @@ def setup_analisis_usd_v2(ss: gspread.Spreadsheet) -> None:
             "updateSheetProperties": {
                 "properties": {
                     "sheetId": ws.id,
-                    "gridProperties": {"frozenRowCount": 2, "frozenColumnCount": 1},
+                    "gridProperties": {"frozenRowCount": 2, "frozenColumnCount": 2},
                 },
                 "fields": "gridProperties.frozenRowCount,gridProperties.frozenColumnCount",
             }
