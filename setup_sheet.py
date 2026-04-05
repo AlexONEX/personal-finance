@@ -18,6 +18,7 @@ from src.setup import (
     setup_ingresos,
     setup_inversiones,
     setup_rem,
+    setup_simulador,
 )
 
 load_dotenv()
@@ -43,6 +44,7 @@ def setup_all():
     setup_analisis_ars(ss)
     setup_analisis_usd(ss)
     setup_dashboard(ss)
+    setup_simulador(ss)
 
     print(
         f"\nSetup completo: https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit"

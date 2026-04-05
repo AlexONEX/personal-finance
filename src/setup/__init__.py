@@ -20,6 +20,7 @@ from src.setup.impuestos import setup_impuestos
 from src.setup.ingresos import setup_ingresos
 from src.setup.inversiones import setup_inversiones
 from src.setup.rem import setup_rem
+from src.setup.simulador import setup_simulador
 from src.setup.utils import apply_formatting, col_idx, get_or_create_worksheet
 
 __all__ = [
@@ -34,4 +35,5 @@ __all__ = [
     "setup_analisis_ars",
     "setup_analisis_usd",
     "setup_dashboard",
+    "setup_simulador",
 ]
