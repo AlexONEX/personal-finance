@@ -104,9 +104,9 @@ def create_formulas(row_num: int) -> list:
         # M: Rendimiento % Acumulado ARS
         f'=IF(L{r}="-", "-", IF({is_first_row}, L{r}, (1+M{prev_r})*(1+L{r})-1))',
         # N: CER Inicio Mes (primer día del mes)
-        f'=IFERROR(VLOOKUP(A{r}, historic_data!$A$4:$B, 2, TRUE), "-")',
+        f'=IFERROR(IFERROR(1/(1/VLOOKUP(A{r}, historic_data!$A$4:$B, 2, FALSE)), IFERROR(1/(1/VLOOKUP(A{r}, historic_data!$A$4:$E, 5, FALSE)), VLOOKUP(A{r}, historic_data!$A$4:$B, 2, TRUE))), "-")',
         # O: CER Fin Mes (último día del mes)
-        f'=IFERROR(VLOOKUP({ultimo_dia_formula}, historic_data!$A$4:$B, 2, TRUE), "-")',
+        f'=IFERROR(IFERROR(1/(1/VLOOKUP({ultimo_dia_formula}, historic_data!$A$4:$B, 2, FALSE)), IFERROR(1/(1/VLOOKUP({ultimo_dia_formula}, historic_data!$A$4:$E, 5, FALSE)), VLOOKUP({ultimo_dia_formula}, historic_data!$A$4:$B, 2, TRUE))), "-")',
         # P: Δ% CER MoM
         f'=IF(OR(N{r}="-", O{r}="-"), "-", (O{r}/N{r})-1)',
         # Q: Rendimiento MoM vs CER

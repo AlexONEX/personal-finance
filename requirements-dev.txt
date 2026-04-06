@@ -1,0 +1,19 @@
+# Development dependencies for CER validation system
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+
+# Google Sheets (already in main requirements.txt if exists)
+# gspread>=5.10.0
+# google-auth>=2.22.0
+# google-auth-oauthlib>=1.0.0
+
+# Data fetching (already in main requirements.txt if exists)
+# requests>=2.31.0
+# beautifulsoup4>=4.12.0
+# openpyxl>=3.1.0
+# yfinance>=0.2.0
+
+# Utilities (already in main requirements.txt if exists)
+# python-dotenv>=1.0.0

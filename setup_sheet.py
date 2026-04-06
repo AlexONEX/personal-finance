@@ -10,11 +10,14 @@ from dotenv import load_dotenv
 
 from src.connectors.sheets import get_sheets_client
 from src.setup import (
+    setup_analisis_ars,
+    setup_analisis_usd,
     setup_historic,
     setup_impuestos,
     setup_ingresos,
     setup_inversiones,
     setup_rem,
+    setup_simulador,
 )
 
 load_dotenv()
@@ -22,7 +25,7 @@ load_dotenv()
 SPREADSHEET_ID = os.environ.get("SPREADSHEET_ID")
 
 
-def main():
+def setup_all():
     """Ejecuta el setup completo de todas las hojas."""
     if not SPREADSHEET_ID:
         print("ERROR: SPREADSHEET_ID no definido en .env")
@@ -37,6 +40,9 @@ def main():
     setup_rem(ss)
     setup_ingresos(ss)
     setup_inversiones(ss)
+    setup_analisis_ars(ss)
+    setup_analisis_usd(ss)
+    setup_simulador(ss)
 
     print(
         f"\nSetup completo: https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit"
@@ -44,4 +50,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    setup_all()

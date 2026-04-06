@@ -1,6 +1,13 @@
-"""Estructura OPTIMIZADA de la sheet Ingresos - Feb 2026."""
+"""Estructura de sheets del Ingresos Tracker.
+
+Esta versión usa fórmulas simples (sin ARRAYFORMULA) para facilitar debugging y validación.
+"""
 
 from src.config import TAX_RATES
+
+# =============================================================================
+# INGRESOS - Tab principal simplificada (solo inputs + totales)
+# =============================================================================
 
 INCOME_GROUPS = [
     ("A", "A", "PERIODO"),
@@ -9,34 +16,36 @@ INCOME_GROUPS = [
     ("J", "J", "BONOS"),
     ("K", "L", "BENEFICIOS"),
     ("M", "M", "TOTAL"),
-    ("N", "S", "COMPARACION CON ULTIMO AUMENTO ARS"),
-    ("T", "V", "INFLACIÓN (CER)"),
-    ("W", "AB", "PROYECCION REM"),
-    ("AC", "AF", "DÓLAR"),
-    ("AG", "AL", "VS ÚLTIMO AUMENTO USD"),
+    ("N", "P", "VALOR/HORA"),
+    ("Q", "Q", "ASCENSO"),
+    ("R", "R", "AUMENTO"),
 ]
 
 INCOME_COLUMNS = [
-    ("A", "Periodo Abonado", '=TEXT(B{r}, "mmmm yyyy")'),
+    (
+        "A",
+        "Periodo Abonado",
+        '=ARRAYFORMULA(IF(B3:B<>"", TEXT(B3:B, "mmmm yyyy"), ""))',
+    ),
     ("B", "Fecha", None),
     ("C", "Bruto", None),
     (
         "D",
         "Jubilacion",
-        '=IF(OR(ISBLANK(C{r}), C{r}=0), "-", ROUND(C{r}*impuestos!$B$2,0))',
+        '=IF(OR(ISBLANK(C{r}), C{r}=0), "", ROUND(C{r}*impuestos!$B$2,0))',
     ),
-    ("E", "PAMI", '=IF(OR(ISBLANK(C{r}), C{r}=0), "-", ROUND(C{r}*impuestos!$B$3,0))'),
+    ("E", "PAMI", '=IF(OR(ISBLANK(C{r}), C{r}=0), "", ROUND(C{r}*impuestos!$B$3,0))'),
     (
         "F",
         "Obra Social",
-        '=IF(OR(ISBLANK(C{r}), C{r}=0), "-", ROUND(C{r}*impuestos!$B$4,0))',
+        '=IF(OR(ISBLANK(C{r}), C{r}=0), "", ROUND(C{r}*impuestos!$B$4,0))',
     ),
-    ("G", "Neto", '=IF(OR(ISBLANK(C{r}), C{r}=0), "-", C{r}-D{r}-E{r}-F{r})'),
+    ("G", "Neto", '=IF(OR(ISBLANK(C{r}), C{r}=0), "", C{r}-D{r}-E{r}-F{r})'),
     ("H", "SAC Bruto", None),
     (
         "I",
         "SAC Neto",
-        '=IF(OR(ISBLANK(H{r}), H{r}=0), "-", H{r}-ROUND(H{r}*impuestos!$B$2,0)-ROUND(H{r}*impuestos!$B$3,0)-ROUND(H{r}*impuestos!$B$4,0))',
+        '=IF(OR(ISBLANK(H{r}), H{r}=0), "", H{r}-ROUND(H{r}*impuestos!$B$2,0)-ROUND(H{r}*impuestos!$B$3,0)-ROUND(H{r}*impuestos!$B$4,0))',
     ),
     ("J", "Bono Neto", None),
     ("K", "Tarjeta Corporativa", None),
@@ -44,116 +53,27 @@ INCOME_COLUMNS = [
     (
         "M",
         "Total Neto",
-        '=IF(OR(ISBLANK(G{r}), G{r}="-"), "-", IFERROR(IF(SUM(G{r}:L{r})=0, "-", SUM(G{r}:L{r})), "-"))',
+        '=IF(OR(ISBLANK(G{r}), G{r}=""), "", IFERROR(IF(SUM(G{r}:L{r})=0, "", SUM(G{r}:L{r})), ""))',
     ),
-    (
-        "N",
-        "Bruto Base",
-        '=IF(OR(ISBLANK(C{r}), C{r}=0), "-", IF(OR(ROW(C{r})=3, C{r}<>C{r-1}), C{r}, N{r-1}))',
-    ),
+    ("N", "Horas Diarias", None),
     (
         "O",
-        "Neto Base",
-        '=IF(OR(ISBLANK(C{r}), C{r}=0), "-", IF(OR(ROW(C{r})=3, C{r}<>C{r-1}), G{r}, O{r-1}))',
+        "Bruto/Hora",
+        '=IF(OR(ISBLANK(C{r}), C{r}=0, ISBLANK(N{r}), N{r}=0), "", ROUND(C{r}/(N{r}*20), 2))',
     ),
     (
         "P",
-        "CER Base",
-        '=IF(OR(ISBLANK(C{r}), C{r}=0), "-", IF(OR(ROW(C{r})=3, C{r}<>C{r-1}), VLOOKUP(EOMONTH(B{r}, 0), historic_data!$A$4:$B, 2, TRUE), P{r-1}))',
+        "Neto/Hora",
+        '=IF(OR(ISBLANK(G{r}), G{r}="", ISBLANK(N{r}), N{r}=0), "", ROUND(G{r}/(N{r}*20), 2))',
     ),
-    (
-        "Q",
-        "Paridad CER (Bruto)",
-        '=IF(OR(ISBLANK(C{r}), C{r}=0, P{r}="-"), "-", IFERROR(N{r} * (VLOOKUP(EOMONTH(B{r}, 0), historic_data!$A$4:$B, 2, TRUE)/P{r}), "-"))',
-    ),
+    ("Q", "¿Ascenso?", None),
     (
         "R",
-        "Paridad CER (Neto)",
-        '=IF(OR(ISBLANK(C{r}), C{r}=0, P{r}="-"), "-", IFERROR(O{r} * (VLOOKUP(EOMONTH(B{r}, 0), historic_data!$A$4:$B, 2, TRUE)/P{r}), "-"))',
-    ),
-    (
-        "S",
-        "Poder Adq (Neto). vs Aumento",
-        '=IF(OR(ISBLANK(C{r}), C{r}=0, P{r}="-"), "-", IFERROR((G{r}/O{r}) / (VLOOKUP(EOMONTH(B{r}, 0), historic_data!$A$4:$B, 2, TRUE)/P{r}) - 1, "-"))',
-    ),
-    (
-        "T",
-        "Δ% CER MoM",
-        '=IF(OR(ISBLANK(C{r}), C{r}=0), "-", IFERROR((VLOOKUP(B{r}, historic_data!$A$4:$B, 2, TRUE) / VLOOKUP(B{r}-30, historic_data!$A$4:$B, 2, TRUE)) - 1, "-"))',
-    ),
-    (
-        "U",
-        "Δ% Salario vs Cer",
-        '=IF(OR(T{r}="-", ISBLANK(G{r}), ISBLANK(G{r-1}), G{r}=0, G{r-1}=0), "-", IFERROR((G{r}/G{r-1})/(1+T{r})-1,"-"))',
-    ),
-    (
-        "V",
-        "Δ% Salario vs Cer Acum",
-        '=IF(OR(ISBLANK(C{r}), C{r}=0), "-", IFERROR((C{r}/C$3) / (VLOOKUP(EOMONTH(B{r}, 0), historic_data!$A$4:$B, 2, TRUE)/VLOOKUP(EOMONTH(B$3, 0), historic_data!$A$4:$B, 2, TRUE)) - 1, "-"))',
-    ),
-    (
-        "W",
-        "REM 3m (%)",
-        '=IF(OR(ISBLANK(C{r}), C{r}=0), "-", (1+IFERROR(VLOOKUP(EOMONTH(B{r}, 0), REM!$A$4:$I, 3, FALSE), 0))*(1+IFERROR(VLOOKUP(EOMONTH(B{r}, 0), REM!$A$4:$I, 4, FALSE), 0))*(1+IFERROR(VLOOKUP(EOMONTH(B{r}, 0), REM!$A$4:$I, 5, FALSE), 0))-1)',
-    ),
-    ("X", "Objetivo 3m Bruto", '=IF(W{r}="-", "-", IFERROR(C{r} * (1+W{r}), "-"))'),
-    ("Y", "Objetivo 3m Neto", '=IF(W{r}="-", "-", IFERROR(G{r} * (1+W{r}), "-"))'),
-    (
-        "Z",
-        "REM 6m (%)",
-        '=IF(OR(ISBLANK(C{r}), C{r}=0), "-", (1+W{r})*(1+IFERROR(VLOOKUP(EOMONTH(B{r}, 0), REM!$A$4:$I, 6, FALSE), 0))*(1+IFERROR(VLOOKUP(EOMONTH(B{r}, 0), REM!$A$4:$I, 7, FALSE), 0))*(1+IFERROR(VLOOKUP(EOMONTH(B{r}, 0), REM!$A$4:$I, 8, FALSE), 0))-1)',
-    ),
-    ("AA", "Objetivo 6m Bruto", '=IF(Z{r}="-", "-", IFERROR(C{r} * (1+Z{r}), "-"))'),
-    ("AB", "Objetivo 6m Neto", '=IF(Z{r}="-", "-", IFERROR(G{r} * (1+Z{r}), "-"))'),
-    (
-        "AC",
-        "CCL",
-        '=IF(OR(ISBLANK(C{r}), C{r}=0), "-", IFERROR(INDEX(FILTER(historic_data!$C$4:$C, historic_data!$C$4:$C <> ""), MATCH(B{r}, FILTER(historic_data!$A$4:$A, historic_data!$C$4:$C <> ""), 1)), "-"))',
-    ),
-    (
-        "AD",
-        "Δ % CCL MoM",
-        '=IF(AC{r}="-", "-", IFERROR((AC{r} - INDEX(FILTER(historic_data!$C$4:$C, historic_data!$C$4:$C <> ""), MATCH(EOMONTH(B{r}, -1), FILTER(historic_data!$A$4:$A, historic_data!$C$4:$C <> ""), 1))) / INDEX(FILTER(historic_data!$C$4:$C, historic_data!$C$4:$C <> ""), MATCH(EOMONTH(B{r}, -1), FILTER(historic_data!$A$4:$A, historic_data!$C$4:$C <> ""), 1)), "-"))',
-    ),
-    (
-        "AE",
-        "Sueldo USD Bruto",
-        '=IF(OR(C{r}=0, AC{r}="-"), "-", IFERROR(C{r}/AC{r},"-"))',
-    ),
-    (
-        "AF",
-        "Sueldo USD Neto",
-        '=IF(OR(G{r}="-", AC{r}="-"), "-", IFERROR(G{r}/AC{r},"-"))',
-    ),
-    (
-        "AG",
-        "CCL Base",
-        '=IF(OR(ISBLANK(C{r}), C{r}=0), "-", IF(OR(ROW(C{r})=3, C{r}<>C{r-1}), AC{r}, AG{r-1}))',
-    ),
-    (
-        "AH",
-        "Sueldo USD Bruto Base",
-        '=IF(OR(ISBLANK(C{r}), C{r}=0), "-", IF(OR(ROW(C{r})=3, C{r}<>C{r-1}), AE{r}, AH{r-1}))',
-    ),
-    (
-        "AI",
-        "Sueldo USD Neto Base",
-        '=IF(OR(ISBLANK(C{r}), C{r}=0), "-", IF(OR(ROW(C{r})=3, C{r}<>C{r-1}), AF{r}, AI{r-1}))',
-    ),
-    (
-        "AJ",
-        "Paridad USD (Bruto)",
-        '=IF(OR(N{r}="-", AC{r}="-", AG{r}="-"), "-", IFERROR(N{r} * (AC{r}/AG{r}), "-"))',
-    ),
-    (
-        "AK",
-        "Paridad USD (Neto)",
-        '=IF(OR(O{r}="-", AC{r}="-", AG{r}="-"), "-", IFERROR(O{r} * (AC{r}/AG{r}), "-"))',
-    ),
-    (
-        "AL",
-        "Atraso USD",
-        '=IF(OR(AF{r}="-", AI{r}="-"), "-", IFERROR((AF{r}/AI{r})-1, "-"))',
+        "¿Aumento?",
+        {
+            "row_3": '=""',
+            "row_4_plus": '=IF(O{r}="", "", IF(O{r} > O{r-1}, TRUE, ""))',
+        },
     ),
 ]
 
@@ -171,31 +91,11 @@ COLUMN_FORMATS = {
     "K": {"type": "CURRENCY", "pattern": "$#,##0"},
     "L": {"type": "CURRENCY", "pattern": "$#,##0"},
     "M": {"type": "CURRENCY", "pattern": "$#,##0"},
-    "N": {"type": "NUMBER", "pattern": "#,##0"},
-    "O": {"type": "NUMBER", "pattern": "#,##0"},
-    "P": {"type": "NUMBER", "pattern": "0.0000"},
-    "Q": {"type": "CURRENCY", "pattern": "$#,##0"},
-    "R": {"type": "CURRENCY", "pattern": "$#,##0"},
-    "S": {"type": "PERCENT", "pattern": "0.00%"},
-    "T": {"type": "PERCENT", "pattern": "0.00%"},
-    "U": {"type": "PERCENT", "pattern": "0.00%"},
-    "V": {"type": "PERCENT", "pattern": "0.00%"},
-    "W": {"type": "PERCENT", "pattern": "0.00%"},
-    "X": {"type": "CURRENCY", "pattern": "$#,##0"},
-    "Y": {"type": "CURRENCY", "pattern": "$#,##0"},
-    "Z": {"type": "PERCENT", "pattern": "0.00%"},
-    "AA": {"type": "CURRENCY", "pattern": "$#,##0"},
-    "AB": {"type": "CURRENCY", "pattern": "$#,##0"},
-    "AC": {"type": "CURRENCY", "pattern": "$#,##0.00"},
-    "AD": {"type": "PERCENT", "pattern": "0.00%"},
-    "AE": {"type": "NUMBER", "pattern": "#,##0.00"},
-    "AF": {"type": "NUMBER", "pattern": "#,##0.00"},
-    "AG": {"type": "CURRENCY", "pattern": "$#,##0.00"},
-    "AH": {"type": "NUMBER", "pattern": "#,##0.00"},
-    "AI": {"type": "NUMBER", "pattern": "#,##0.00"},
-    "AJ": {"type": "CURRENCY", "pattern": "$#,##0"},
-    "AK": {"type": "CURRENCY", "pattern": "$#,##0"},
-    "AL": {"type": "PERCENT", "pattern": "0.00%"},
+    "N": {"type": "NUMBER", "pattern": "0"},
+    "O": {"type": "CURRENCY", "pattern": "$#,##0.00"},
+    "P": {"type": "CURRENCY", "pattern": "$#,##0.00"},
+    "Q": {"type": "TEXT", "pattern": "@"},
+    "R": {"type": "TEXT", "pattern": "@"},
 }
 
 COLUMN_DESCRIPTIONS = {
@@ -212,32 +112,402 @@ COLUMN_DESCRIPTIONS = {
     "K": "Tarjeta corporativa mensual (input manual)",
     "L": "Otros beneficios (input manual)",
     "M": "Total neto mensual (suma de todo)",
-    "N": "Bruto al momento del último aumento",
-    "O": "Neto al momento del último aumento",
-    "P": "Valor CER al momento del último aumento",
-    "Q": "Sueldo bruto para mantener paridad CER",
-    "R": "Sueldo neto para mantener paridad CER",
-    "S": "Poder adquisitivo acumulado vs último aumento",
-    "T": "Variación CER mensual (30 días)",
-    "U": "Poder adquisitivo MoM (salario vs CER mes a mes)",
-    "V": "Poder adquisitivo acumulado desde inicio (salario vs CER total)",
-    "W": "Inflación proyectada REM 3m",
-    "X": "Sueldo bruto objetivo para dentro de 3 meses",
-    "Y": "Sueldo neto objetivo para dentro de 3 meses",
-    "Z": "Inflación proyectada REM 6m",
-    "AA": "Sueldo bruto objetivo para dentro de 6 meses",
-    "AB": "Sueldo neto objetivo para dentro de 6 meses",
-    "AC": "Dólar CCL cierre de mes",
-    "AD": "Variación % CCL MoM",
-    "AE": "Sueldo Bruto en USD CCL",
-    "AF": "Sueldo Neto en USD CCL",
-    "AG": "CCL al momento del último aumento",
-    "AH": "Sueldo Bruto USD al momento del último aumento",
-    "AI": "Sueldo Neto USD al momento del último aumento",
-    "AJ": "Sueldo en ARS para recuperar Bruto USD del aumento",
-    "AK": "Sueldo en ARS para recuperar Neto USD del aumento",
-    "AL": "Atraso real en USD vs último aumento",
+    "N": "Horas diarias trabajadas (input manual: 6, 7, 8, etc.)",
+    "O": "Bruto por hora = Bruto / (Horas * 20 días)",
+    "P": "Neto por hora = Neto / (Horas * 20 días)",
+    "Q": "Marca TRUE en ascensos para resetear bases de comparación",
+    "R": "Detecta automáticamente TRUE cuando Bruto/Hora aumenta (ascensos + ajustes)",
 }
+
+# =============================================================================
+# ANÁLISIS ARS - Con columna auxiliar K_BASE
+# =============================================================================
+
+ANALISIS_ARS_GROUPS = [
+    ("A", "B", "PERIODO"),
+    ("C", "E", "SUELDO"),
+    ("F", "K", "VS ÚLTIMO AUMENTO (CER)"),
+    ("L", "O", "VS ÚLTIMO AUMENTO (INDEC)"),
+    ("P", "S", "VARIACIÓN MENSUAL"),
+    ("T", "Y", "PROYECCIÓN REM"),
+]
+
+# Definición de columnas con soporte para fórmulas multi-fila
+# Formato: (letra, título, fórmula_o_dict, metadata)
+# Si fórmula es dict: {"row_3": formula, "row_4_plus": formula, "hidden": bool}
+
+ANALISIS_ARS_COLUMNS = [
+    # PERIODO
+    ("A", "Periodo", {"single": '=IF(Ingresos!B{r}<>"", Ingresos!A{r}, "")'}),
+    (
+        "B",
+        "Periodo (fecha)",
+        {
+            "row_3": "=DATE(2023, 10, 1)",
+            "row_4_plus": "=EDATE(B{r-1}, 1)",
+            "hidden": True,
+        },
+    ),
+    # SUELDO
+    ("C", "Fecha", {"single": '=IF(Ingresos!B{r}<>"", Ingresos!B{r}, "")'}),
+    ("D", "Bruto/Hora", {"single": '=IF(Ingresos!B{r}<>"", Ingresos!O{r}, "")'}),
+    ("E", "Neto/Hora", {"single": '=IF(Ingresos!B{r}<>"", Ingresos!P{r}, "")'}),
+    # VS ÚLTIMO AUMENTO (CER)
+    (
+        "F",
+        "Bruto/Hora Base",
+        {
+            "row_3": '=IF(D3="", "", D3)',
+            "row_4_plus": '=IF(D{r}="", "", IF(Ingresos!Q{r-1}=TRUE, D{r-1}, F{r-1}))',
+        },
+    ),
+    (
+        "G",
+        "Neto/Hora Base",
+        {
+            "row_3": '=IF(E3="", "", E3)',
+            "row_4_plus": '=IF(E{r}="", "", IF(Ingresos!Q{r-1}=TRUE, E{r-1}, G{r-1}))',
+        },
+    ),
+    (
+        "H",
+        "CER Base",
+        {
+            "row_3": '=IF(B3="", "", IFERROR(VLOOKUP(EOMONTH(B3,1)+15, historic_data!$A$4:$B, 2, TRUE), 0))',
+            "row_4_plus": '=IF(B{r}="", "", IF(Ingresos!Q{r-1}=TRUE, IFERROR(VLOOKUP(EOMONTH(B{r-1},1)+15, historic_data!$A$4:$B, 2, TRUE), 0), H{r-1}))',
+        },
+    ),
+    (
+        "I",
+        "Paridad CER (Bruto/Hora)",
+        {
+            "single": '=IF(OR(B{r}="", D{r}="", F{r}="", H{r}=0), "", LET(d, EOMONTH(B{r},1)+15, cer, IFERROR(VLOOKUP(d, historic_data!$A$4:$B, 2, TRUE), 0), IF(cer=0, "", F{r} * (cer/H{r}))))',
+        },
+    ),
+    (
+        "J",
+        "Paridad CER (Neto/Hora)",
+        {
+            "single": '=IF(OR(B{r}="", E{r}="", G{r}="", H{r}=0), "", LET(d, EOMONTH(B{r},1)+15, cer, IFERROR(VLOOKUP(d, historic_data!$A$4:$B, 2, TRUE), 0), IF(cer=0, "", G{r} * (cer/H{r}))))',
+        },
+    ),
+    (
+        "K",
+        "Poder Adq vs Aumento (CER)",
+        {
+            "single": '=IF(OR(B{r}="", E{r}="", G{r}="", H{r}=0), "", LET(d, EOMONTH(B{r},1)+15, cer, IFERROR(VLOOKUP(d, historic_data!$A$4:$B, 2, TRUE), 0), IF(cer=0, "", (E{r}/G{r}) / (cer/H{r}) - 1)))',
+        },
+    ),
+    # VS ÚLTIMO AUMENTO (INDEC)
+    (
+        "L",
+        "Índice INDEC Actual",
+        {
+            "row_3": '=IF(B3="", "", LET(mes, B3, infl, IFERROR(VLOOKUP(VALUE(mes), ARRAYFORMULA({VALUE(CPI!$A$4:$A), CPI!$N$4:$N}), 2, FALSE), 0), 100 * (1 + infl/100)))',
+            "row_4_plus": '=IF(B{r}="", "", LET(mes, B{r}, infl, IFERROR(VLOOKUP(VALUE(mes), ARRAYFORMULA({VALUE(CPI!$A$4:$A), CPI!$N$4:$N}), 2, FALSE), 0), L{r-1} * (1 + infl/100)))',
+        },
+    ),
+    # COLUMNA AUXILIAR - SE OCULTARÁ
+    (
+        "M",
+        "INDEC Base",
+        {
+            "row_3": '=IF(L3="", "", L3)',
+            "row_4_plus": '=IF(L{r}="", "", IF(Ingresos!Q{r-1}=TRUE, L{r-1}, M{r-1}))',
+            "hidden": True,
+        },
+    ),
+    ("N", "Poder Adq vs REM (%)", {"single": '=IF(E{r}="", "", 0)'}),  # TODO
+    (
+        "O",
+        "Poder Adq vs INDEC (%)",
+        {
+            "row_3": '=IF(OR(E3="", G3="", L3="", M3=""), "", 0)',
+            "row_4_plus": '=IF(OR(E{r}="", G{r}="", L{r}="", M{r}=""), "", (E{r}/G{r}) / (L{r}/M{r}) - 1)',
+        },
+    ),
+    # VARIACIÓN MENSUAL
+    (
+        "P",
+        "Δ% CER MoM",
+        {
+            "row_3": '=IF(B3="", "", "")',
+            "row_4_plus": '=IF(B{r}="", "", LET(d_act, EOMONTH(B{r},1)+15, d_ant, EOMONTH(B{r-1},1)+15, cer_act, IFERROR(VLOOKUP(d_act, historic_data!$A$4:$B, 2, TRUE), 0), cer_ant, IFERROR(VLOOKUP(d_ant, historic_data!$A$4:$B, 2, TRUE), 0), IF(OR(cer_act=0, cer_ant=0), "", (cer_act/cer_ant)-1)))',
+        },
+    ),
+    (
+        "Q",
+        "Δ% $/Hora vs CER Acum",
+        {
+            "single": '=IF(OR(B{r}="", D{r}="", F{r}="", H{r}=0), "", LET(d, EOMONTH(B{r},1)+15, cer, IFERROR(VLOOKUP(d, historic_data!$A$4:$B, 2, TRUE), 0), IF(cer=0, "", (D{r}/F{r}) / (cer/H{r}) - 1)))',
+        },
+    ),
+    (
+        "R",
+        "CER Actual",
+        {
+            "single": '=IF(B{r}="", "", LET(d, EOMONTH(B{r},1)+15, cer, IFERROR(VLOOKUP(d, historic_data!$A$4:$B, 2, TRUE), 0), IF(cer=0, "", cer)))',
+        },
+    ),
+    ("S", "CER Base", {"single": '=IF(B{r}="", "", H{r})'}),
+    # PROYECCIÓN REM
+    (
+        "T",
+        "REM 3m (%)",
+        {
+            "single": '=IF(OR(B{r}="", D{r}=""), "", LET(f, B{r}, i1, IFERROR(VLOOKUP(f, REM!$A$4:$I, 3, TRUE), 0), i2, IFERROR(VLOOKUP(f, REM!$A$4:$I, 4, TRUE), 0), i3, IFERROR(VLOOKUP(f, REM!$A$4:$I, 5, TRUE), 0), (1+i1)*(1+i2)*(1+i3)-1))',
+        },
+    ),
+    (
+        "U",
+        "Objetivo 3m Bruto/Hora",
+        {"single": '=IF(OR(B{r}="", D{r}="", T{r}=""), "", D{r} * (1+T{r}))'},
+    ),
+    (
+        "V",
+        "Objetivo 3m Neto/Hora",
+        {"single": '=IF(OR(B{r}="", E{r}="", T{r}=""), "", E{r} * (1+T{r}))'},
+    ),
+    (
+        "W",
+        "REM 6m (%)",
+        {
+            "single": '=IF(OR(B{r}="", D{r}="", T{r}=""), "", LET(f, B{r}, i4, IFERROR(VLOOKUP(f, REM!$A$4:$I, 6, TRUE), 0), i5, IFERROR(VLOOKUP(f, REM!$A$4:$I, 7, TRUE), 0), i6, IFERROR(VLOOKUP(f, REM!$A$4:$I, 8, TRUE), 0), (1+T{r})*(1+i4)*(1+i5)*(1+i6)-1))',
+        },
+    ),
+    (
+        "X",
+        "Objetivo 6m Bruto/Hora",
+        {"single": '=IF(OR(B{r}="", D{r}="", W{r}=""), "", D{r} * (1+W{r}))'},
+    ),
+    (
+        "Y",
+        "Objetivo 6m Neto/Hora",
+        {"single": '=IF(OR(B{r}="", E{r}="", W{r}=""), "", E{r} * (1+W{r}))'},
+    ),
+]
+
+ANALISIS_ARS_FORMATS = {
+    "A": {"type": "TEXT", "pattern": "mmmm yyyy"},
+    "B": {"type": "DATE", "pattern": "dd/mm/yyyy"},
+    "C": {"type": "DATE", "pattern": "dd/mm/yyyy"},
+    "D": {"type": "CURRENCY", "pattern": "$#,##0.00"},
+    "E": {"type": "CURRENCY", "pattern": "$#,##0.00"},
+    "F": {"type": "CURRENCY", "pattern": "$#,##0.00"},
+    "G": {"type": "CURRENCY", "pattern": "$#,##0.00"},
+    "H": {"type": "NUMBER", "pattern": "0.0000"},
+    "I": {"type": "CURRENCY", "pattern": "$#,##0.00"},
+    "J": {"type": "CURRENCY", "pattern": "$#,##0.00"},
+    "K": {"type": "PERCENT", "pattern": "0.00%"},
+    "L": {"type": "NUMBER", "pattern": "0.00"},
+    "M": {"type": "NUMBER", "pattern": "0.00"},
+    "N": {"type": "PERCENT", "pattern": "0.00%"},
+    "O": {"type": "PERCENT", "pattern": "0.00%"},
+    "P": {"type": "PERCENT", "pattern": "0.00%"},
+    "Q": {"type": "PERCENT", "pattern": "0.00%"},
+    "R": {"type": "NUMBER", "pattern": "0.0000"},
+    "S": {"type": "NUMBER", "pattern": "0.0000"},
+    "T": {"type": "PERCENT", "pattern": "0.00%"},
+    "U": {"type": "CURRENCY", "pattern": "$#,##0"},
+    "V": {"type": "CURRENCY", "pattern": "$#,##0"},
+    "W": {"type": "PERCENT", "pattern": "0.00%"},
+    "X": {"type": "CURRENCY", "pattern": "$#,##0"},
+    "Y": {"type": "CURRENCY", "pattern": "$#,##0"},
+}
+
+# =============================================================================
+# ANÁLISIS USD - Sin Paridad USD (16 columnas)
+# =============================================================================
+
+ANALISIS_USD_GROUPS = [
+    ("A", "B", "PERIODO"),
+    ("C", "E", "SUELDO ARS"),
+    ("F", "I", "SUELDO USD NOMINAL"),
+    ("J", "M", "SUELDO USD REAL"),
+    ("N", "Q", "VS ÚLTIMO AUMENTO"),
+]
+
+ANALISIS_USD_COLUMNS = [
+    # PERIODO
+    ("A", "Periodo", {"single": '=IF(Ingresos!B{r}<>"", Ingresos!A{r}, "")'}),
+    (
+        "B",
+        "Periodo (fecha)",
+        {
+            "row_3": "=DATE(2023, 10, 1)",
+            "row_4_plus": "=EDATE(B{r-1}, 1)",
+            "hidden": True,
+        },
+    ),
+    # SUELDO ARS
+    ("C", "Fecha", {"single": '=IF(Ingresos!B{r}<>"", Ingresos!B{r}, "")'}),
+    ("D", "Bruto ARS", {"single": '=IF(Ingresos!B{r}<>"", Ingresos!C{r}, "")'}),
+    ("E", "Neto ARS", {"single": '=IF(Ingresos!B{r}<>"", Ingresos!G{r}, "")'}),
+    # SUELDO USD NOMINAL
+    (
+        "F",
+        "CCL",
+        {
+            "single": '=IF(C{r}="", "", IFERROR(LOOKUP(C{r}, historic_data!$A$4:$A, historic_data!$C$4:$C), ""))'
+        },
+    ),
+    (
+        "G",
+        "Δ% CCL MoM",
+        {
+            "row_3": '=""',
+            "row_4_plus": '=IF(F{r}="", "", IFERROR((F{r} - LOOKUP(EOMONTH(C{r},-1), historic_data!$A$4:$A, historic_data!$C$4:$C)) / LOOKUP(EOMONTH(C{r},-1), historic_data!$A$4:$A, historic_data!$C$4:$C), ""))',
+        },
+    ),
+    ("H", "Bruto USD", {"single": '=IF(OR(C{r}="", D{r}="", F{r}=""), "", D{r}/F{r})'}),
+    ("I", "Neto USD", {"single": '=IF(OR(C{r}="", E{r}="", F{r}=""), "", E{r}/F{r})'}),
+    # SUELDO USD REAL
+    (
+        "J",
+        "CER",
+        {
+            "single": '=IF(B{r}="", "", LET(d, EOMONTH(B{r},1)+15, cer, IFERROR(VLOOKUP(d, historic_data!$A$4:$B, 2, TRUE), 0), IF(cer=0, "", cer)))',
+        },
+    ),
+    (
+        "K",
+        "CCL Real",
+        {
+            "single": '=IF(OR(C{r}="", F{r}="", J{r}="", J$3=""), "", F{r} * (J$3 / J{r}))'
+        },
+    ),
+    (
+        "L",
+        "Bruto USD Real",
+        {"single": '=IF(OR(C{r}="", D{r}="", K{r}=""), "", D{r}/K{r})'},
+    ),
+    (
+        "M",
+        "Neto USD Real",
+        {"single": '=IF(OR(C{r}="", E{r}="", K{r}=""), "", E{r}/K{r})'},
+    ),
+    # VS ÚLTIMO AUMENTO
+    (
+        "N",
+        "CCL Base",
+        {
+            "row_3": '=IF(F3="", "", F3)',
+            "row_4_plus": '=IF(F{r}="", "", IF(Ingresos!Q{r-1}=TRUE, F{r-1}, N{r-1}))',
+        },
+    ),
+    (
+        "O",
+        "Bruto USD Base",
+        {
+            "row_3": '=IF(H3="", "", H3)',
+            "row_4_plus": '=IF(H{r}="", "", IF(Ingresos!Q{r-1}=TRUE, H{r-1}, O{r-1}))',
+        },
+    ),
+    (
+        "P",
+        "Neto USD Base",
+        {
+            "row_3": '=IF(I3="", "", I3)',
+            "row_4_plus": '=IF(I{r}="", "", IF(Ingresos!Q{r-1}=TRUE, I{r-1}, P{r-1}))',
+        },
+    ),
+    (
+        "Q",
+        "Variación USD (%)",
+        {"single": '=IF(OR(C{r}="", I{r}="", P{r}=""), "", (I{r}/P{r})-1)'},
+    ),
+]
+
+ANALISIS_USD_FORMATS = {
+    "A": {"type": "TEXT", "pattern": "mmmm yyyy"},
+    "B": {"type": "DATE", "pattern": "dd/mm/yyyy"},
+    "C": {"type": "DATE", "pattern": "dd/mm/yyyy"},
+    "D": {"type": "CURRENCY", "pattern": "$#,##0"},
+    "E": {"type": "CURRENCY", "pattern": "$#,##0"},
+    "F": {"type": "CURRENCY", "pattern": "$#,##0.00"},
+    "G": {"type": "PERCENT", "pattern": "0.00%"},
+    "H": {"type": "NUMBER", "pattern": "#,##0.00"},
+    "I": {"type": "NUMBER", "pattern": "#,##0.00"},
+    "J": {"type": "NUMBER", "pattern": "0.0000"},
+    "K": {"type": "CURRENCY", "pattern": "$#,##0.00"},
+    "L": {"type": "NUMBER", "pattern": "#,##0.00"},
+    "M": {"type": "NUMBER", "pattern": "#,##0.00"},
+    "N": {"type": "CURRENCY", "pattern": "$#,##0.00"},
+    "O": {"type": "NUMBER", "pattern": "#,##0.00"},
+    "P": {"type": "NUMBER", "pattern": "#,##0.00"},
+    "Q": {"type": "PERCENT", "pattern": "0.00%"},
+}
+
+# =============================================================================
+# Helpers para procesar fórmulas multi-fila
+# =============================================================================
+
+
+def get_formula_for_row(col_def: tuple, row_num: int) -> str:
+    """Obtiene la fórmula correcta para una fila específica.
+
+    Args:
+        col_def: Tupla (letra, título, fórmula_o_dict, ...)
+        row_num: Número de fila (3, 4, 5, ...)
+
+    Returns:
+        Fórmula con placeholders {r} reemplazados por el número de fila
+    """
+    col_letter, title, formula_spec = col_def[:3]
+
+    if formula_spec is None:
+        return None
+
+    if isinstance(formula_spec, str):
+        # Fórmula simple (legacy)
+        return formula_spec.replace("{r}", str(row_num))
+
+    if isinstance(formula_spec, dict):
+        # Nueva estructura con soporte multi-fila
+        if "single" in formula_spec:
+            # Una sola fórmula para todas las filas
+            formula = formula_spec["single"]
+        elif row_num == 3 and "row_3" in formula_spec:
+            # Fórmula específica para fila 3
+            formula = formula_spec["row_3"]
+        elif "row_4_plus" in formula_spec:
+            # Fórmula para filas 4+
+            formula = formula_spec["row_4_plus"]
+        else:
+            return None
+
+        # Reemplazar placeholders
+        formula = formula.replace("{r}", str(row_num))
+        formula = formula.replace("{r-1}", str(row_num - 1))
+
+        return formula
+
+    return None
+
+
+def is_column_hidden(col_def: tuple) -> bool:
+    """Determina si una columna debe ocultarse.
+
+    Args:
+        col_def: Tupla (letra, título, fórmula_o_dict, ...)
+
+    Returns:
+        True si la columna debe ocultarse
+    """
+    if len(col_def) < 3:
+        return False
+
+    formula_spec = col_def[2]
+
+    if isinstance(formula_spec, dict):
+        return formula_spec.get("hidden", False)
+
+    return False
+
+
+# =============================================================================
+# Otras estructuras
+# =============================================================================
 
 IMPUESTOS_ROWS = [
     ("Jubilacion", TAX_RATES["jubilacion"]["rate"], TAX_RATES["jubilacion"]["law"]),
@@ -251,4 +521,11 @@ HISTORIC_VARIABLES = [
     (30, "CER", "CER"),
     ("IOL/dolarapi", "CCL", "CCL"),
     ("yfinance", "SPY", "SPY"),
+    (None, "CER Estimado", None),
+    (27, "Inflación Mensual %", "INFLACION_MENSUAL"),
+]
+
+SIMULADOR_INFLACION_ROWS = [
+    ("Mes (1-12)", "Año", "CER % Estimada", "Estado"),
+    (None, None, None, "Ingresá los datos arriba y ejecutá el script"),
 ]

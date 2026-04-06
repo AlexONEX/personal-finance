@@ -6,6 +6,7 @@ Estructura:
 - ccl.py: Fetcher para CCL (Ambito + dolarapi)
 - rem.py: Fetcher para REM (BCRA web scraping + Excel)
 - spy.py: Fetcher para SPY (yfinance)
+- inflacion_mensual.py: Fetcher para Inflación Mensual (BCRA API)
 """
 
 from src.fetchers.base import DataSource
@@ -13,6 +14,7 @@ from src.fetchers.cer import CERFetcher
 from src.fetchers.ccl import CCLFetcher
 from src.fetchers.rem import REMFetcher
 from src.fetchers.spy import SPYFetcher
+from src.fetchers.inflacion_mensual import InflacionMensualFetcher
 
 __all__ = [
     "DataSource",
@@ -20,4 +22,5 @@ __all__ = [
     "CCLFetcher",
     "REMFetcher",
     "SPYFetcher",
+    "InflacionMensualFetcher",
 ]

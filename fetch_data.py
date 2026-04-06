@@ -9,13 +9,19 @@ import logging
 import os
 import urllib3
 from concurrent.futures import ThreadPoolExecutor
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from dotenv import load_dotenv
 
 from src.config import FETCH_CONFIG, MONTHS_MAP_SHORT, SHEET_LIMITS, SHEETS
 from src.connectors.sheets import get_sheets_client
-from src.fetchers import CCLFetcher, CERFetcher, REMFetcher, SPYFetcher
+from src.fetchers import (
+    CCLFetcher,
+    CERFetcher,
+    InflacionMensualFetcher,
+    REMFetcher,
+    SPYFetcher,
+)
 
 # Suppress only InsecureRequestWarning for BCRA (they have cert issues)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -105,12 +111,12 @@ def get_last_rem_date_from_sheet() -> tuple[int, int]:
     return (BACKFILL_FROM.year, BACKFILL_FROM.month)
 
 
-def update_sheets(cer_data, ccl_data, spy_data, rem_reports):
+def update_sheets(cer_data, ccl_data, spy_data, inflacion_data, rem_reports):
     """Actualiza las hojas de Google Sheets con los datos obtenidos."""
     client = get_sheets_client()
     ss = client.open_by_key(SPREADSHEET_ID)
 
-    if cer_data or ccl_data or spy_data:
+    if cer_data or ccl_data or spy_data or inflacion_data:
         ws_h = ss.worksheet(HISTORIC_SHEET)
 
         existing_rows = ws_h.get_all_values()[FIRST_DATA_ROW - 1 :]
@@ -121,35 +127,52 @@ def update_sheets(cer_data, ccl_data, spy_data, rem_reports):
                     row[1] if len(row) > 1 else "",
                     row[2] if len(row) > 2 else "",
                     row[3] if len(row) > 3 else "",
+                    row[4] if len(row) > 4 else "",  # CER Estimado (col E)
+                    row[5] if len(row) > 5 else "",  # Inflación Mensual (col F)
                 ]
 
         for d, val in cer_data.items():
             fmt_d = d.strftime("%d/%m/%Y")
             if fmt_d not in data_map:
-                data_map[fmt_d] = ["", "", ""]
+                data_map[fmt_d] = ["", "", "", "", ""]
             data_map[fmt_d][0] = val
 
         for d, val in ccl_data.items():
             fmt_d = d.strftime("%d/%m/%Y")
             if fmt_d not in data_map:
-                data_map[fmt_d] = ["", "", ""]
+                data_map[fmt_d] = ["", "", "", "", ""]
             data_map[fmt_d][1] = val
 
         for d, val in spy_data.items():
             fmt_d = d.strftime("%d/%m/%Y")
             if fmt_d not in data_map:
-                data_map[fmt_d] = ["", "", ""]
+                data_map[fmt_d] = ["", "", "", "", ""]
             data_map[fmt_d][2] = val
+
+        # Inflación mensual se asocia al último día del mes
+        for d, val in inflacion_data.items():
+            fmt_d = d.strftime("%d/%m/%Y")
+            if fmt_d not in data_map:
+                data_map[fmt_d] = ["", "", "", "", ""]
+            data_map[fmt_d][4] = val  # Columna F (índice 4 en data_map)
 
         sorted_dates = sorted(
             data_map.keys(), key=lambda x: datetime.strptime(x, "%d/%m/%Y")
         )
         payload = [
-            [d, data_map[d][0], data_map[d][1], data_map[d][2]] for d in sorted_dates
+            [
+                d,
+                data_map[d][0],
+                data_map[d][1],
+                data_map[d][2],
+                data_map[d][3],
+                data_map[d][4],
+            ]
+            for d in sorted_dates
         ]
 
         ws_h.update(
-            range_name=f"A{FIRST_DATA_ROW}:D{FIRST_DATA_ROW + len(payload) - 1}",
+            range_name=f"A{FIRST_DATA_ROW}:F{FIRST_DATA_ROW + len(payload) - 1}",
             values=payload,
             value_input_option="USER_ENTERED",
         )
@@ -162,8 +185,22 @@ def update_sheets(cer_data, ccl_data, spy_data, rem_reports):
             range_name="B1", values=[[timestamp]], value_input_option="USER_ENTERED"
         )
 
-        existing_rem = ws_r.get_all_values()[3:]  # Skip rows 1-3
-        existing_months = {row[0] for row in existing_rem if len(row) >= 1 and row[0]}
+        # Get raw values (dates as serial numbers) to compare correctly
+        existing_rem_raw = ws_r.get("A4:I", value_render_option="UNFORMATTED_VALUE")
+        existing_rem_raw = existing_rem_raw if existing_rem_raw else []
+
+        # Convert serial dates to "YYYY-MM-DD" for comparison
+        # Google Sheets epoch is 1899-12-30
+        existing_months = set()
+        for row in existing_rem_raw:
+            if len(row) >= 1 and row[0]:
+                val = row[0]
+                if isinstance(val, (int, float)):
+                    # Convert serial to date
+                    d = date(1899, 12, 30) + timedelta(days=int(val))
+                    existing_months.add(d.strftime("%Y-%m-%d"))
+                elif isinstance(val, str):
+                    existing_months.add(val)
 
         new_reports = {
             month: projs
@@ -172,7 +209,11 @@ def update_sheets(cer_data, ccl_data, spy_data, rem_reports):
         }
 
         if new_reports:
-            next_row = 4 + len(existing_rem)
+            # Count only rows with actual data (non-empty column A)
+            rows_with_data = sum(
+                1 for row in existing_rem_raw if len(row) >= 1 and row[0]
+            )
+            next_row = 4 + rows_with_data
             sorted_new_months = sorted(new_reports.keys())
             payload = [[m] + new_reports[m] for m in sorted_new_months]
 
@@ -216,31 +257,39 @@ def main():
     else:
         since_dt = get_last_date_from_sheet()
 
-    until_dt = date.today()
-    print(f"Updating dataset from {since_dt} to {until_dt}...")
+    today = date.today()
+    until_dt_future = today + timedelta(days=45)
+
+    print(
+        f"Updating dataset from {since_dt} to {today} (CER until {until_dt_future})..."
+    )
 
     # Crear instancias de fetchers
     cer_fetcher = CERFetcher()
     ccl_fetcher = CCLFetcher()
     spy_fetcher = SPYFetcher()
+    inflacion_fetcher = InflacionMensualFetcher()
     rem_fetcher = REMFetcher()
 
     with ThreadPoolExecutor(
         max_workers=FETCH_CONFIG["max_workers_parallel"]
     ) as executor:
-        future_cer = executor.submit(cer_fetcher.fetch, since_dt, until_dt)
-        future_ccl = executor.submit(ccl_fetcher.fetch, since_dt, until_dt)
-        future_spy = executor.submit(spy_fetcher.fetch, since_dt, until_dt)
+        future_cer = executor.submit(cer_fetcher.fetch, since_dt, until_dt_future)
+        future_ccl = executor.submit(ccl_fetcher.fetch, since_dt, today)
+        future_spy = executor.submit(spy_fetcher.fetch, since_dt, today)
+        future_inflacion = executor.submit(inflacion_fetcher.fetch, since_dt, today)
 
         cer = future_cer.result()
         ccl = future_ccl.result()
         spy = future_spy.result()
+        inflacion = future_inflacion.result()
 
     last_rem_date = get_last_rem_date_from_sheet()
     logger.info(f"Last REM date in sheet: {last_rem_date[0]}-{last_rem_date[1]:02d}")
     rem_reports = rem_fetcher.fetch(last_rem_date)
+    logger.info(f"Rem report, first row data: {next(iter(rem_reports.items()), ('N/A', 'N/A'))}")
 
-    update_sheets(cer, ccl, spy, rem_reports)
+    update_sheets(cer, ccl, spy, inflacion, rem_reports)
     print("Dataset updated successfully")
 
 
