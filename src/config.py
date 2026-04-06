@@ -19,7 +19,6 @@ SHEETS = {
     "INVERSIONES": "Inversiones",
     "ANALISIS_ARS": "Análisis ARS",
     "ANALISIS_USD": "Análisis USD",
-    "DASHBOARD": "Dashboard",
     "SIMULADOR_INFLACION": "Simulador_Inflacion",
 }
 

@@ -9,12 +9,12 @@ Estructura:
 - inversiones.py: Setup de hoja de inversiones
 - analisis_ars.py: Setup de hoja Análisis ARS
 - analisis_usd.py: Setup de hoja Análisis USD
-- dashboard.py: Setup de hoja Dashboard
+- analisis_v2.py: Setup de hojas Análisis ARS/USD V2 (fórmulas por fila)
 """
 
 from src.setup.analisis_ars import setup_analisis_ars
 from src.setup.analisis_usd import setup_analisis_usd
-from src.setup.dashboard import setup_dashboard
+from src.setup.analisis_v2 import setup_analisis_ars_v2, setup_analisis_usd_v2
 from src.setup.historic import setup_historic
 from src.setup.impuestos import setup_impuestos
 from src.setup.ingresos import setup_ingresos
@@ -34,6 +34,7 @@ __all__ = [
     "setup_inversiones",
     "setup_analisis_ars",
     "setup_analisis_usd",
-    "setup_dashboard",
+    "setup_analisis_ars_v2",
+    "setup_analisis_usd_v2",
     "setup_simulador",
 ]
