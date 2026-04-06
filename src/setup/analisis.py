@@ -9,7 +9,7 @@ from typing import List, Dict, Tuple
 
 from src.config import SHEET_LIMITS, SHEETS, get_color, lighten_color
 from src.setup.utils import apply_formatting, col_idx, get_or_create_worksheet
-from src.sheets.structure_v2 import (
+from src.sheets.structure import (
     ANALISIS_ARS_COLUMNS,
     ANALISIS_ARS_FORMATS,
     ANALISIS_ARS_GROUPS,
@@ -67,7 +67,7 @@ def get_hidden_columns(columns: List[Tuple]) -> List[str]:
     return hidden
 
 
-def setup_analisis_ars_v2(ss: gspread.Spreadsheet) -> None:
+def setup_analisis_ars(ss: gspread.Spreadsheet) -> None:
     """Configura la hoja de Análisis ARS con fórmulas V2.
 
     Args:
@@ -95,7 +95,7 @@ def setup_analisis_ars_v2(ss: gspread.Spreadsheet) -> None:
     print(f"Limpiando fórmulas viejas en {sheet_name}...")
     ws.batch_clear([f"A3:AD{max_rows}"])
 
-    print(f"Generando fórmulas por fila...")
+    print("Generando fórmulas por fila...")
     formulas_by_col = generate_formulas_for_sheet(
         ANALISIS_ARS_COLUMNS, start_row=start_row, end_row=max_rows
     )
@@ -150,10 +150,12 @@ def setup_analisis_ars_v2(ss: gspread.Spreadsheet) -> None:
         for i in range(0, len(formula_updates), batch_size):
             batch = formula_updates[i : i + batch_size]
             ws.batch_update(batch, value_input_option="USER_ENTERED")
-            print(f"  Aplicado batch {i//batch_size + 1}/{(len(formula_updates) + batch_size - 1)//batch_size}")
+            print(
+                f"  Aplicado batch {i // batch_size + 1}/{(len(formula_updates) + batch_size - 1) // batch_size}"
+            )
 
     # Formateo
-    print(f"Aplicando formatos...")
+    print("Aplicando formatos...")
     reqs = [
         # Unmerge all cells first
         {
@@ -291,7 +293,7 @@ def setup_analisis_ars_v2(ss: gspread.Spreadsheet) -> None:
     print(f"✅ {sheet_name} V2 configurado correctamente")
 
 
-def setup_analisis_usd_v2(ss: gspread.Spreadsheet) -> None:
+def setup_analisis_usd(ss: gspread.Spreadsheet) -> None:
     """Configura la hoja de Análisis USD con fórmulas V2.
 
     Args:
@@ -319,7 +321,7 @@ def setup_analisis_usd_v2(ss: gspread.Spreadsheet) -> None:
     print(f"Limpiando fórmulas viejas en {sheet_name}...")
     ws.batch_clear([f"A3:T{max_rows}"])
 
-    print(f"Generando fórmulas por fila...")
+    print("Generando fórmulas por fila...")
     formulas_by_col = generate_formulas_for_sheet(
         ANALISIS_USD_COLUMNS, start_row=start_row, end_row=max_rows
     )
@@ -368,10 +370,12 @@ def setup_analisis_usd_v2(ss: gspread.Spreadsheet) -> None:
         for i in range(0, len(formula_updates), batch_size):
             batch = formula_updates[i : i + batch_size]
             ws.batch_update(batch, value_input_option="USER_ENTERED")
-            print(f"  Aplicado batch {i//batch_size + 1}/{(len(formula_updates) + batch_size - 1)//batch_size}")
+            print(
+                f"  Aplicado batch {i // batch_size + 1}/{(len(formula_updates) + batch_size - 1) // batch_size}"
+            )
 
     # Formateo
-    print(f"Aplicando formatos...")
+    print("Aplicando formatos...")
     reqs = [
         {
             "unmergeCells": {

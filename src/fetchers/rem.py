@@ -32,6 +32,7 @@ class REMFetcher:
         Returns:
             Diccionario de "YYYY-MM-DD" -> lista de 8 proyecciones
             [M, M+1, M+2, M+3, M+4, M+5, M+6, 12m]
+        Fix a meter, los datos de inflacion que traemos son nominales es decir inflacion 3% la deberiamos tratar como 0.03 pero el bcra devuelve 3, entonces dividimos por 100 para dejarlo en formato decimal. Esto es importante para que el modelo pueda interpretar correctamente los datos."
         """
         links = self._get_publication_links(since_date)
         reports = {}
@@ -45,6 +46,7 @@ class REMFetcher:
                     reports[month_key] = projections
 
         logger.info(f"REM: fetched {len(reports)} reports since {since_date}")
+
         return reports
 
     def _get_publication_links(
@@ -94,8 +96,7 @@ class REMFetcher:
                     {"url": pub_url, "date": period_date, "period": period_text}
                 )
 
-            except (ValueError, KeyError) as e:
-                logger.warning(f"REM: failed to parse row {period_text}: {e}")
+            except (ValueError, KeyError):
                 continue
 
         return sorted(links, key=lambda x: x["date"])

@@ -27,7 +27,7 @@ ss = gc.open_by_key(SPREADSHEET_ID)
 # Fechas de ascensos reales
 ASCENSOS = [
     datetime(2024, 12, 2),  # Trainee → Junior+
-    datetime(2025, 8, 1),   # Junior+ → Semi-Senior
+    datetime(2025, 8, 1),  # Junior+ → Semi-Senior
 ]
 
 print("Leyendo datos de Ingresos...")
@@ -56,10 +56,12 @@ for i, fecha_str in enumerate(fechas):
     # Check if this date is an ascenso
     if fecha in ASCENSOS:
         row_num = i + 3  # +3 because: +2 for headers, +1 for 1-indexed
-        updates.append({
-            "range": f"Q{row_num}",  # Column Q = ¿Ascenso?
-            "values": [[True]]
-        })
+        updates.append(
+            {
+                "range": f"Q{row_num}",  # Column Q = ¿Ascenso?
+                "values": [[True]],
+            }
+        )
         print(f"✓ Marcando ascenso en fila {row_num}: {fecha_str}")
 
 if updates:

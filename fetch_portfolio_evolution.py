@@ -130,19 +130,21 @@ def write_to_sheets(results: list[dict]) -> None:
     for r in results:
         ars = r["ars"]
         usd = r["usd"]
-        payload.append([
-            r["mes"],           # A: Mes
-            ars["ingresos"],    # B: Ingreso ARS
-            ars["egresos"],     # C: Egreso ARS
-            ars["valor_inicio"],# D: Valor Inicio ARS
-            ars["valor_fin"],   # E: Valor Fin ARS
-            usd["ingresos"],    # F: Ingreso USD
-            usd["egresos"],     # G: Egreso USD
-            usd["valor_inicio"],# H: Valor Inicio USD
-            usd["valor_fin"],   # I: Valor Fin USD
-            ars["ganancia"],    # J: Ganancia ARS
-            usd["ganancia"],    # K: Ganancia USD
-        ])
+        payload.append(
+            [
+                r["mes"],  # A: Mes
+                ars["ingresos"],  # B: Ingreso ARS
+                ars["egresos"],  # C: Egreso ARS
+                ars["valor_inicio"],  # D: Valor Inicio ARS
+                ars["valor_fin"],  # E: Valor Fin ARS
+                usd["ingresos"],  # F: Ingreso USD
+                usd["egresos"],  # G: Egreso USD
+                usd["valor_inicio"],  # H: Valor Inicio USD
+                usd["valor_fin"],  # I: Valor Fin USD
+                ars["ganancia"],  # J: Ganancia ARS
+                usd["ganancia"],  # K: Ganancia USD
+            ]
+        )
 
     # Escribir desde fila 3 (después de headers en filas 1-2)
     start_row = 3

@@ -44,7 +44,11 @@ def setup_ingresos(ss: gspread.Spreadsheet) -> None:
             else:
                 # Fórmulas normales se repiten en cada fila
                 col_payload = [
-                    [formula_template.replace("{r}", str(r)).replace("{r-1}", str(r - 1))]
+                    [
+                        formula_template.replace("{r}", str(r)).replace(
+                            "{r-1}", str(r - 1)
+                        )
+                    ]
                     for r in range(3, max_rows + 1)
                 ]
                 formula_updates.append(

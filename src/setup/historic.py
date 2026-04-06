@@ -16,7 +16,9 @@ def setup_historic(ss: gspread.Spreadsheet) -> None:
     sheet_name = SHEETS["HISTORIC"]
     print(f"Configurando {sheet_name}...")
 
-    ws = get_or_create_worksheet(ss, sheet_name, rows=2000, cols=len(HISTORIC_VARIABLES))
+    ws = get_or_create_worksheet(
+        ss, sheet_name, rows=2000, cols=len(HISTORIC_VARIABLES)
+    )
 
     # Row 1: Metadata (source)
     meta = [f"Source: {v[0]}" if v[0] else "" for v in HISTORIC_VARIABLES]

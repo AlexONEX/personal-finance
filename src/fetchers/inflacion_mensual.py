@@ -51,7 +51,9 @@ class InflacionMensualFetcher(DataSource):
 
                 for record in detalle:
                     if "fecha" not in record or "valor" not in record:
-                        logger.warning(f"Inflación mensual: skipping malformed record: {record}")
+                        logger.warning(
+                            f"Inflación mensual: skipping malformed record: {record}"
+                        )
                         continue
                     try:
                         # La fecha viene como último día del mes (ej: 2024-12-31)
@@ -80,5 +82,7 @@ class InflacionMensualFetcher(DataSource):
                 logger.error(f"Inflación mensual: invalid response format: {e}")
                 break
 
-        logger.info(f"Inflación mensual: fetched {len(results)} records from {since} to {until}")
+        logger.info(
+            f"Inflación mensual: fetched {len(results)} records from {since} to {until}"
+        )
         return results

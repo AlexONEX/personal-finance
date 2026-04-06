@@ -15,7 +15,13 @@ from dotenv import load_dotenv
 
 from src.config import FETCH_CONFIG, MONTHS_MAP_SHORT, SHEET_LIMITS, SHEETS
 from src.connectors.sheets import get_sheets_client
-from src.fetchers import CCLFetcher, CERFetcher, InflacionMensualFetcher, REMFetcher, SPYFetcher
+from src.fetchers import (
+    CCLFetcher,
+    CERFetcher,
+    InflacionMensualFetcher,
+    REMFetcher,
+    SPYFetcher,
+)
 
 # Suppress only InsecureRequestWarning for BCRA (they have cert issues)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -154,7 +160,14 @@ def update_sheets(cer_data, ccl_data, spy_data, inflacion_data, rem_reports):
             data_map.keys(), key=lambda x: datetime.strptime(x, "%d/%m/%Y")
         )
         payload = [
-            [d, data_map[d][0], data_map[d][1], data_map[d][2], data_map[d][3], data_map[d][4]]
+            [
+                d,
+                data_map[d][0],
+                data_map[d][1],
+                data_map[d][2],
+                data_map[d][3],
+                data_map[d][4],
+            ]
             for d in sorted_dates
         ]
 
@@ -246,8 +259,10 @@ def main():
 
     today = date.today()
     until_dt_future = today + timedelta(days=45)
-    
-    print(f"Updating dataset from {since_dt} to {today} (CER until {until_dt_future})...")
+
+    print(
+        f"Updating dataset from {since_dt} to {today} (CER until {until_dt_future})..."
+    )
 
     # Crear instancias de fetchers
     cer_fetcher = CERFetcher()
@@ -272,6 +287,7 @@ def main():
     last_rem_date = get_last_rem_date_from_sheet()
     logger.info(f"Last REM date in sheet: {last_rem_date[0]}-{last_rem_date[1]:02d}")
     rem_reports = rem_fetcher.fetch(last_rem_date)
+    logger.info(f"Rem report, first row data: {next(iter(rem_reports.items()), ('N/A', 'N/A'))}")
 
     update_sheets(cer, ccl, spy, inflacion, rem_reports)
     print("Dataset updated successfully")

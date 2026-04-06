@@ -15,38 +15,36 @@ from typing import Dict, Optional
 # Detectadas automáticamente desde datos CER + calendario INDEC típico (~día 15 del mes siguiente)
 INDEC_PUBLICATION_DATES: Dict[tuple[int, int], date] = {
     # 2024 - Detectadas desde datos reales
-    (2024, 1): date(2024, 2, 15),   # Inflación enero 20.6%
-    (2024, 2): date(2024, 3, 18),   # Inflación febrero 13.2% - DETECTADA: 18/03
-    (2024, 3): date(2024, 4, 12),   # Inflación marzo 11.0%
-    (2024, 4): date(2024, 5, 16),   # Inflación abril 8.8% - DETECTADA: 16/05
-    (2024, 5): date(2024, 6, 19),   # Inflación mayo 4.2% - DETECTADA: 19/06
-    (2024, 6): date(2024, 7, 12),   # Inflación junio 4.6%
-    (2024, 7): date(2024, 8, 14),   # Inflación julio 4.0%
-    (2024, 8): date(2024, 9, 13),   # Inflación agosto 4.2%
+    (2024, 1): date(2024, 2, 15),  # Inflación enero 20.6%
+    (2024, 2): date(2024, 3, 18),  # Inflación febrero 13.2% - DETECTADA: 18/03
+    (2024, 3): date(2024, 4, 12),  # Inflación marzo 11.0%
+    (2024, 4): date(2024, 5, 16),  # Inflación abril 8.8% - DETECTADA: 16/05
+    (2024, 5): date(2024, 6, 19),  # Inflación mayo 4.2% - DETECTADA: 19/06
+    (2024, 6): date(2024, 7, 12),  # Inflación junio 4.6%
+    (2024, 7): date(2024, 8, 14),  # Inflación julio 4.0%
+    (2024, 8): date(2024, 9, 13),  # Inflación agosto 4.2%
     (2024, 9): date(2024, 10, 15),  # Inflación septiembre 3.5%
-    (2024, 10): date(2024, 11, 13), # Inflación octubre 2.7%
-    (2024, 11): date(2024, 12, 12), # Inflación noviembre 2.4%
+    (2024, 10): date(2024, 11, 13),  # Inflación octubre 2.7%
+    (2024, 11): date(2024, 12, 12),  # Inflación noviembre 2.4%
     (2024, 12): date(2025, 1, 15),  # Inflación diciembre 2.7%
-
     # 2025 - Detectadas desde datos reales
-    (2025, 1): date(2025, 2, 13),   # Inflación enero 2.2%
-    (2025, 2): date(2025, 3, 14),   # Inflación febrero 2.4%
-    (2025, 3): date(2025, 4, 18),   # Inflación marzo 3.7% - DETECTADA: 18/04
-    (2025, 4): date(2025, 5, 17),   # Inflación abril 2.8% - DETECTADA: 17/05
-    (2025, 5): date(2025, 6, 19),   # Inflación mayo 1.5% - DETECTADA: 19/06
-    (2025, 6): date(2025, 7, 15),   # Inflación junio 1.6%
-    (2025, 7): date(2025, 8, 13),   # Inflación julio 1.9%
-    (2025, 8): date(2025, 9, 12),   # Inflación agosto 1.9%
+    (2025, 1): date(2025, 2, 13),  # Inflación enero 2.2%
+    (2025, 2): date(2025, 3, 14),  # Inflación febrero 2.4%
+    (2025, 3): date(2025, 4, 18),  # Inflación marzo 3.7% - DETECTADA: 18/04
+    (2025, 4): date(2025, 5, 17),  # Inflación abril 2.8% - DETECTADA: 17/05
+    (2025, 5): date(2025, 6, 19),  # Inflación mayo 1.5% - DETECTADA: 19/06
+    (2025, 6): date(2025, 7, 15),  # Inflación junio 1.6%
+    (2025, 7): date(2025, 8, 13),  # Inflación julio 1.9%
+    (2025, 8): date(2025, 9, 12),  # Inflación agosto 1.9%
     (2025, 9): date(2025, 10, 15),  # Inflación septiembre 2.1%
-    (2025, 10): date(2025, 11, 13), # Inflación octubre 2.3%
-    (2025, 11): date(2025, 12, 12), # Inflación noviembre 2.5%
+    (2025, 10): date(2025, 11, 13),  # Inflación octubre 2.3%
+    (2025, 11): date(2025, 12, 12),  # Inflación noviembre 2.5%
     (2025, 12): date(2026, 1, 15),  # Inflación diciembre 2.8%
-
     # 2026
-    (2026, 1): date(2026, 2, 13),   # Inflación enero 2.9%
-    (2026, 2): date(2026, 3, 13),   # Inflación febrero 2.9%
-    (2026, 3): date(2026, 4, 15),   # Inflación marzo 2.5%
-    (2026, 4): date(2026, 5, 15),   # Inflación abril 2.19% (estimado)
+    (2026, 1): date(2026, 2, 13),  # Inflación enero 2.9%
+    (2026, 2): date(2026, 3, 13),  # Inflación febrero 2.9%
+    (2026, 3): date(2026, 4, 15),  # Inflación marzo 2.5%
+    (2026, 4): date(2026, 5, 15),  # Inflación abril 2.19% (estimado)
 }
 
 
@@ -96,8 +94,7 @@ def get_inflation_month_for_cer_date(cer_date: date) -> Optional[tuple[int, int]
 
 
 def detect_publication_dates_from_cer_data(
-    cer_data: Dict[date, float],
-    inflacion_data: Dict[date, float]
+    cer_data: Dict[date, float], inflacion_data: Dict[date, float]
 ) -> Dict[tuple[int, int], date]:
     """Detecta automáticamente las fechas de publicación basándose en cambios en CER.
 
