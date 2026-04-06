@@ -32,7 +32,10 @@ class REMFetcher:
         Returns:
             Diccionario de "YYYY-MM-DD" -> lista de 8 proyecciones
             [M, M+1, M+2, M+3, M+4, M+5, M+6, 12m]
-        Fix a meter, los datos de inflacion que traemos son nominales es decir inflacion 3% la deberiamos tratar como 0.03 pero el bcra devuelve 3, entonces dividimos por 100 para dejarlo en formato decimal. Esto es importante para que el modelo pueda interpretar correctamente los datos."
+
+        Note:
+            Los datos de inflación que trae BCRA son nominales (ej: 3% = 3),
+            los dividimos por 100 para dejarlo en formato decimal (0.03).
         """
         links = self._get_publication_links(since_date)
         reports = {}

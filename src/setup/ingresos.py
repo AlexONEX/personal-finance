@@ -37,11 +37,11 @@ def setup_ingresos(ss: gspread.Spreadsheet) -> None:
         if len(rest) > 0 and rest[0]:
             formula_template = rest[0]
             # Si la fórmula es ARRAYFORMULA, solo va en la fila 3
-            if "ARRAYFORMULA" in formula_template:
+            if isinstance(formula_template, str) and "ARRAYFORMULA" in formula_template:
                 formula_updates.append(
                     {"range": f"{col_let}3:{col_let}3", "values": [[formula_template]]}
                 )
-            else:
+            elif isinstance(formula_template, str):
                 # Fórmulas normales se repiten en cada fila
                 col_payload = [
                     [
