@@ -43,8 +43,9 @@ BACKFILL_FROM = FETCH_CONFIG["backfill_from"]
 def get_last_date_from_sheet() -> date:
     """Obtiene la última fecha registrada en historic_data para actualizar desde ahí.
 
+    Valida que la fila tenga datos reales en CER, CCL o SPY (columnas B, C, D).
     Retrocede 7 días desde la última fecha válida para reescribir/actualizar datos recientes.
-    Si la última fecha es futura (datos proyectados), usa hoy menos 7 días.
+    Si no hay datos, usa BACKFILL_FROM.
     """
     try:
         client = get_sheets_client()
@@ -52,30 +53,53 @@ def get_last_date_from_sheet() -> date:
         ws_h = ss.worksheet(HISTORIC_SHEET)
         existing_rows = ws_h.get_all_values()[FIRST_DATA_ROW - 1 :]
 
-        dates = []
+        dates_with_data = []
         today = date.today()
 
         for row in existing_rows:
-            if len(row) >= 1 and row[0]:
-                try:
-                    d = datetime.strptime(row[0], "%d/%m/%Y").date()
-                    # Only consider dates up to today (ignore future/projected dates)
-                    if d <= today:
-                        dates.append(d)
-                except ValueError:
-                    continue
+            # Check if row has date in column A
+            if len(row) < 1 or not row[0]:
+                continue
 
-        if dates:
-            last_valid_date = max(dates)
+            # Validate that at least one data column (CER/CCL/SPY) has actual data
+            # Column B = CER, Column C = CCL, Column D = SPY
+            has_data = False
+            if len(row) >= 2 and row[1] and str(row[1]).strip():  # CER
+                has_data = True
+            elif len(row) >= 3 and row[2] and str(row[2]).strip():  # CCL
+                has_data = True
+            elif len(row) >= 4 and row[3] and str(row[3]).strip():  # SPY
+                has_data = True
+
+            if not has_data:
+                continue
+
+            try:
+                d = datetime.strptime(row[0], "%d/%m/%Y").date()
+                # Only consider dates up to today (ignore future/projected dates)
+                if d <= today:
+                    dates_with_data.append(d)
+            except ValueError:
+                continue
+
+        if dates_with_data:
+            last_valid_date = max(dates_with_data)
             # Rewind 7 days to rewrite/update recent data
             rewind_date = last_valid_date - timedelta(days=7)
-            logger.info(f"Last valid date in sheet: {last_valid_date}, rewinding to {rewind_date} to rewrite recent data")
+            logger.info(
+                f"Last valid date with data in sheet: {last_valid_date}, "
+                f"rewinding to {rewind_date} to rewrite recent data"
+            )
             return rewind_date
+        else:
+            logger.info(
+                f"No valid data found in sheet, starting from BACKFILL_FROM: {BACKFILL_FROM}"
+            )
+            return BACKFILL_FROM
 
     except Exception as e:
         logger.error(f"Failed to get last date from sheet: {e}")
-
-    return BACKFILL_FROM
+        return BACKFILL_FROM
 
 
 def get_last_rem_date_from_sheet() -> tuple[int, int]:
