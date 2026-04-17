@@ -41,7 +41,11 @@ BACKFILL_FROM = FETCH_CONFIG["backfill_from"]
 
 
 def get_last_date_from_sheet() -> date:
-    """Obtiene la última fecha registrada en historic_data para actualizar desde ahí."""
+    """Obtiene la última fecha registrada en historic_data para actualizar desde ahí.
+
+    Retrocede 7 días desde la última fecha válida para reescribir/actualizar datos recientes.
+    Si la última fecha es futura (datos proyectados), usa hoy menos 7 días.
+    """
     try:
         client = get_sheets_client()
         ss = client.open_by_key(SPREADSHEET_ID)
@@ -49,16 +53,24 @@ def get_last_date_from_sheet() -> date:
         existing_rows = ws_h.get_all_values()[FIRST_DATA_ROW - 1 :]
 
         dates = []
+        today = date.today()
+
         for row in existing_rows:
             if len(row) >= 1 and row[0]:
                 try:
                     d = datetime.strptime(row[0], "%d/%m/%Y").date()
-                    dates.append(d)
+                    # Only consider dates up to today (ignore future/projected dates)
+                    if d <= today:
+                        dates.append(d)
                 except ValueError:
                     continue
 
         if dates:
-            return max(dates)
+            last_valid_date = max(dates)
+            # Rewind 7 days to rewrite/update recent data
+            rewind_date = last_valid_date - timedelta(days=7)
+            logger.info(f"Last valid date in sheet: {last_valid_date}, rewinding to {rewind_date} to rewrite recent data")
+            return rewind_date
 
     except Exception as e:
         logger.error(f"Failed to get last date from sheet: {e}")
