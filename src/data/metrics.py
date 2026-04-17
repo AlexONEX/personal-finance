@@ -5,7 +5,6 @@ from typing import List, Dict, Optional
 from .loader import (
     load_sueldo_data,
     load_cer_data,
-    get_cer_for_date,
     get_cer_for_periodo,
     get_horas_trabajadas,
 )
@@ -18,7 +17,7 @@ DIAS_LABORABLES_MES = 20
 # Fechas de ascensos (según usuario: noviembre 2024 y julio 2025)
 ASCENSOS = [
     date(2024, 11, 1),  # Noviembre 2024
-    date(2025, 7, 1),   # Julio 2025
+    date(2025, 7, 1),  # Julio 2025
 ]
 
 
@@ -51,9 +50,18 @@ def parse_periodo_to_date(periodo: str) -> date:
         Fecha del primer día del mes (ej: date(2023, 10, 1))
     """
     MESES = {
-        "enero": 1, "febrero": 2, "marzo": 3, "abril": 4,
-        "mayo": 5, "junio": 6, "julio": 7, "agosto": 8,
-        "septiembre": 9, "octubre": 10, "noviembre": 11, "diciembre": 12,
+        "enero": 1,
+        "febrero": 2,
+        "marzo": 3,
+        "abril": 4,
+        "mayo": 5,
+        "junio": 6,
+        "julio": 7,
+        "agosto": 8,
+        "septiembre": 9,
+        "octubre": 10,
+        "noviembre": 11,
+        "diciembre": 12,
     }
 
     partes = periodo.lower().strip().split()
@@ -83,7 +91,10 @@ def es_ascenso(periodo: str) -> bool:
         periodo_fecha = parse_periodo_to_date(periodo)
         # Verificar si el periodo está en el mes de algún ascenso
         for ascenso_fecha in ASCENSOS:
-            if periodo_fecha.year == ascenso_fecha.year and periodo_fecha.month == ascenso_fecha.month:
+            if (
+                periodo_fecha.year == ascenso_fecha.year
+                and periodo_fecha.month == ascenso_fecha.month
+            ):
                 return True
     except (ValueError, IndexError):
         return False
@@ -178,23 +189,25 @@ def calcular_metricas_cer(
                 poder_adq_vs_aumento = (ratio_neto / ratio_cer) - 1
 
         # Agregar resultado
-        resultados.append({
-            "periodo": periodo,
-            "fecha": fecha,
-            "bruto": bruto,
-            "neto": neto,
-            "horas_diarias": horas,
-            "bruto_hora": bruto_hora,
-            "neto_hora": neto_hora,
-            "bruto_hora_base": bruto_hora_base,
-            "neto_hora_base": neto_hora_base,
-            "cer_actual": cer_actual,
-            "cer_base": cer_base,
-            "paridad_cer_bruto_hora": paridad_cer_bruto,
-            "paridad_cer_neto_hora": paridad_cer_neto,
-            "poder_adq_vs_aumento_cer": poder_adq_vs_aumento,
-            "es_ascenso": es_ascenso(periodo),
-        })
+        resultados.append(
+            {
+                "periodo": periodo,
+                "fecha": fecha,
+                "bruto": bruto,
+                "neto": neto,
+                "horas_diarias": horas,
+                "bruto_hora": bruto_hora,
+                "neto_hora": neto_hora,
+                "bruto_hora_base": bruto_hora_base,
+                "neto_hora_base": neto_hora_base,
+                "cer_actual": cer_actual,
+                "cer_base": cer_base,
+                "paridad_cer_bruto_hora": paridad_cer_bruto,
+                "paridad_cer_neto_hora": paridad_cer_neto,
+                "poder_adq_vs_aumento_cer": poder_adq_vs_aumento,
+                "es_ascenso": es_ascenso(periodo),
+            }
+        )
 
     return resultados
 
@@ -253,12 +266,10 @@ def generar_reporte(resultados: List[Dict]) -> str:
             else "—"
         )
         paridad_n = (
-            f"${r['paridad_cer_neto_hora']:,.2f}"
-            if r["paridad_cer_neto_hora"]
-            else "—"
+            f"${r['paridad_cer_neto_hora']:,.2f}" if r["paridad_cer_neto_hora"] else "—"
         )
         poder_adq = (
-            f"{r['poder_adq_vs_aumento_cer']*100:+.2f}%"
+            f"{r['poder_adq_vs_aumento_cer'] * 100:+.2f}%"
             if r["poder_adq_vs_aumento_cer"] is not None
             else "—"
         )
@@ -279,8 +290,12 @@ def generar_reporte(resultados: List[Dict]) -> str:
     lineas.append("=" * 120)
     lineas.append("")
     lineas.append("NOTAS:")
-    lineas.append("- Paridad CER: Valor que debería tener tu sueldo/hora ajustado por inflación (CER)")
-    lineas.append("- Poder Adq vs Aumento: % de ganancia/pérdida real vs inflación desde último ascenso")
+    lineas.append(
+        "- Paridad CER: Valor que debería tener tu sueldo/hora ajustado por inflación (CER)"
+    )
+    lineas.append(
+        "- Poder Adq vs Aumento: % de ganancia/pérdida real vs inflación desde último ascenso"
+    )
     lineas.append("  * Positivo (+): Ganaste poder adquisitivo (aumento > inflación)")
     lineas.append("  * Negativo (-): Perdiste poder adquisitivo (aumento < inflación)")
     lineas.append("")

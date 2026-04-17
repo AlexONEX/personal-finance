@@ -3,7 +3,7 @@
 main.py - Orquestador central del Ingresos Tracker.
 Uso:
   python main.py --all          # Ejecuta fetch de datos y actualiza todas las sheets
-  python main.py --fetch        # Solo descarga nuevos datos (CER, CCL, etc)
+  python main.py --fetch        # Solo descarga nuevos datos (CER, CCL, CPI, etc)
   python main.py --setup        # Re-aplica estructura y fórmulas (sin fetch)
   python main.py --since YYYY-MM-DD  # Fetch desde una fecha específica
 """
@@ -38,7 +38,7 @@ def main():
     # 1. Fetch de datos
     if args.all or args.fetch:
         print("\n" + "=" * 50)
-        print("1. INICIANDO FETCH DE DATOS (CER, CCL, REM, SPY)")
+        print("1. INICIANDO FETCH DE DATOS (CER, CCL, REM, SPY, CPI)")
         print("=" * 50)
         # Mock sys.argv para fetch_data.main
         fetch_args = []

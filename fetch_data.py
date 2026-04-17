@@ -16,8 +16,10 @@ from dotenv import load_dotenv
 from src.config import FETCH_CONFIG, MONTHS_MAP_SHORT, SHEET_LIMITS, SHEETS
 from src.connectors.sheets import get_sheets_client
 from src.fetchers import (
+    CABACPIFetcher,
     CCLFetcher,
     CERFetcher,
+    INDECCPIFetcher,
     InflacionMensualFetcher,
     REMFetcher,
     SPYFetcher,
@@ -36,6 +38,7 @@ load_dotenv()
 SPREADSHEET_ID = os.environ.get("SPREADSHEET_ID")
 HISTORIC_SHEET = SHEETS["HISTORIC"]
 REM_SHEET = SHEETS["REM"]
+CPI_SHEET = SHEETS["CPI"]
 FIRST_DATA_ROW = SHEET_LIMITS["first_data_row_historic"]
 BACKFILL_FROM = FETCH_CONFIG["backfill_from"]
 
@@ -147,7 +150,9 @@ def get_last_rem_date_from_sheet() -> tuple[int, int]:
     return (BACKFILL_FROM.year, BACKFILL_FROM.month)
 
 
-def update_sheets(cer_data, ccl_data, spy_data, inflacion_data, rem_reports):
+def update_sheets(
+    cer_data, ccl_data, spy_data, inflacion_data, rem_reports, cpi_data=None
+):
     """Actualiza las hojas de Google Sheets con los datos obtenidos."""
     client = get_sheets_client()
     ss = client.open_by_key(SPREADSHEET_ID)
@@ -262,6 +267,94 @@ def update_sheets(cer_data, ccl_data, spy_data, inflacion_data, rem_reports):
         else:
             logger.info("No new REM reports to add")
 
+    # Update CPI sheet
+    if cpi_data:
+        ws_cpi = ss.worksheet(CPI_SHEET)
+
+        # Update timestamp
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+        ws_cpi.update(
+            range_name="B2", values=[[timestamp]], value_input_option="USER_ENTERED"
+        )
+
+        # CPI data structure:
+        # (dates, indec_tn_ng, indec_tn_est, indec_tn_reg, indec_tn_nuc,
+        #  indec_gba_ng, indec_gba_est, indec_gba_reg, indec_gba_nuc,
+        #  caba_idx_ng, caba_idx_est, caba_idx_reg, caba_idx_resto,
+        #  caba_var_ng, caba_var_est, caba_var_reg, caba_var_resto)
+
+        dates = cpi_data.get("dates", [])
+        if dates:
+            # Prepare payload by merging all columns
+            payload = []
+            for i, date_row in enumerate(dates):
+                row = [
+                    date_row[0],  # A: Date
+                    # INDEC Total Nacional
+                    cpi_data["indec_tn_nivel_general"][i][0]
+                    if i < len(cpi_data.get("indec_tn_nivel_general", []))
+                    else "N/A",  # B
+                    cpi_data["indec_tn_estacionales"][i][0]
+                    if i < len(cpi_data.get("indec_tn_estacionales", []))
+                    else "N/A",  # C
+                    cpi_data["indec_tn_regulados"][i][0]
+                    if i < len(cpi_data.get("indec_tn_regulados", []))
+                    else "N/A",  # D
+                    cpi_data["indec_tn_nucleo"][i][0]
+                    if i < len(cpi_data.get("indec_tn_nucleo", []))
+                    else "N/A",  # E
+                    # INDEC GBA
+                    cpi_data["indec_gba_nivel_general"][i][0]
+                    if i < len(cpi_data.get("indec_gba_nivel_general", []))
+                    else "N/A",  # F
+                    cpi_data["indec_gba_estacionales"][i][0]
+                    if i < len(cpi_data.get("indec_gba_estacionales", []))
+                    else "N/A",  # G
+                    cpi_data["indec_gba_regulados"][i][0]
+                    if i < len(cpi_data.get("indec_gba_regulados", []))
+                    else "N/A",  # H
+                    cpi_data["indec_gba_nucleo"][i][0]
+                    if i < len(cpi_data.get("indec_gba_nucleo", []))
+                    else "N/A",  # I
+                    # CABA Indices
+                    cpi_data["caba_idx_nivel_general"][i][0]
+                    if i < len(cpi_data.get("caba_idx_nivel_general", []))
+                    else "N/A",  # J
+                    cpi_data["caba_idx_estacionales"][i][0]
+                    if i < len(cpi_data.get("caba_idx_estacionales", []))
+                    else "N/A",  # K
+                    cpi_data["caba_idx_regulados"][i][0]
+                    if i < len(cpi_data.get("caba_idx_regulados", []))
+                    else "N/A",  # L
+                    cpi_data["caba_idx_resto"][i][0]
+                    if i < len(cpi_data.get("caba_idx_resto", []))
+                    else "N/A",  # M
+                    # CABA Variations
+                    cpi_data["caba_var_nivel_general"][i][0]
+                    if i < len(cpi_data.get("caba_var_nivel_general", []))
+                    else "N/A",  # N
+                    cpi_data["caba_var_estacionales"][i][0]
+                    if i < len(cpi_data.get("caba_var_estacionales", []))
+                    else "N/A",  # O
+                    cpi_data["caba_var_regulados"][i][0]
+                    if i < len(cpi_data.get("caba_var_regulados", []))
+                    else "N/A",  # P
+                    cpi_data["caba_var_resto"][i][0]
+                    if i < len(cpi_data.get("caba_var_resto", []))
+                    else "N/A",  # Q
+                ]
+                payload.append(row)
+
+            # Write to sheet starting at row 4
+            ws_cpi.update(
+                range_name=f"A4:Q{3 + len(payload)}",
+                values=payload,
+                value_input_option="USER_ENTERED",
+            )
+            logger.info(f"Updated CPI sheet with {len(payload)} rows")
+        else:
+            logger.info("No CPI data to update")
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -306,6 +399,8 @@ def main():
     spy_fetcher = SPYFetcher()
     inflacion_fetcher = InflacionMensualFetcher()
     rem_fetcher = REMFetcher()
+    indec_cpi_fetcher = INDECCPIFetcher()
+    caba_cpi_fetcher = CABACPIFetcher()
 
     with ThreadPoolExecutor(
         max_workers=FETCH_CONFIG["max_workers_parallel"]
@@ -323,9 +418,141 @@ def main():
     last_rem_date = get_last_rem_date_from_sheet()
     logger.info(f"Last REM date in sheet: {last_rem_date[0]}-{last_rem_date[1]:02d}")
     rem_reports = rem_fetcher.fetch(last_rem_date)
-    logger.info(f"Rem report, first row data: {next(iter(rem_reports.items()), ('N/A', 'N/A'))}")
+    logger.info(
+        f"Rem report, first row data: {next(iter(rem_reports.items()), ('N/A', 'N/A'))}"
+    )
 
-    update_sheets(cer, ccl, spy, inflacion, rem_reports)
+    # Fetch CPI data
+    logger.info("Fetching CPI data from INDEC and CABA...")
+    cpi_data = {}
+    try:
+        # Fetch INDEC data
+        (
+            indec_dates,
+            indec_tn_ng,
+            indec_tn_est,
+            indec_tn_reg,
+            indec_tn_nuc,
+            indec_gba_ng,
+            indec_gba_est,
+            indec_gba_reg,
+            indec_gba_nuc,
+        ) = indec_cpi_fetcher.fetch(since_dt.strftime("%Y-%m-%d"))
+
+        # Fetch CABA data
+        (
+            caba_dates,
+            caba_idx_ng,
+            caba_idx_est,
+            caba_idx_reg,
+            caba_idx_resto,
+            caba_var_ng,
+            caba_var_est,
+            caba_var_reg,
+            caba_var_resto,
+        ) = caba_cpi_fetcher.fetch(since_dt.strftime("%Y-%m-%d"))
+
+        # Merge dates from both sources
+        all_dates_dict = {}
+        for date_row in indec_dates:
+            all_dates_dict[date_row[0]] = {"indec": True, "caba": False}
+        for date_row in caba_dates:
+            if date_row[0] in all_dates_dict:
+                all_dates_dict[date_row[0]]["caba"] = True
+            else:
+                all_dates_dict[date_row[0]] = {"indec": False, "caba": True}
+
+        # Sort dates
+        sorted_dates = sorted(
+            all_dates_dict.keys(), key=lambda x: datetime.strptime(x, "%d/%m/%Y")
+        )
+
+        # Create index mappings
+        indec_date_to_idx = {
+            date_row[0]: idx for idx, date_row in enumerate(indec_dates)
+        }
+        caba_date_to_idx = {date_row[0]: idx for idx, date_row in enumerate(caba_dates)}
+
+        # Build merged data structure
+        cpi_data = {
+            "dates": [[d] for d in sorted_dates],
+            "indec_tn_nivel_general": [],
+            "indec_tn_estacionales": [],
+            "indec_tn_regulados": [],
+            "indec_tn_nucleo": [],
+            "indec_gba_nivel_general": [],
+            "indec_gba_estacionales": [],
+            "indec_gba_regulados": [],
+            "indec_gba_nucleo": [],
+            "caba_idx_nivel_general": [],
+            "caba_idx_estacionales": [],
+            "caba_idx_regulados": [],
+            "caba_idx_resto": [],
+            "caba_var_nivel_general": [],
+            "caba_var_estacionales": [],
+            "caba_var_regulados": [],
+            "caba_var_resto": [],
+        }
+
+        for date_str in sorted_dates:
+            indec_idx = indec_date_to_idx.get(date_str)
+            caba_idx = caba_date_to_idx.get(date_str)
+
+            # INDEC data
+            if indec_idx is not None:
+                cpi_data["indec_tn_nivel_general"].append(indec_tn_ng[indec_idx])
+                cpi_data["indec_tn_estacionales"].append(indec_tn_est[indec_idx])
+                cpi_data["indec_tn_regulados"].append(indec_tn_reg[indec_idx])
+                cpi_data["indec_tn_nucleo"].append(indec_tn_nuc[indec_idx])
+                cpi_data["indec_gba_nivel_general"].append(indec_gba_ng[indec_idx])
+                cpi_data["indec_gba_estacionales"].append(indec_gba_est[indec_idx])
+                cpi_data["indec_gba_regulados"].append(indec_gba_reg[indec_idx])
+                cpi_data["indec_gba_nucleo"].append(indec_gba_nuc[indec_idx])
+            else:
+                # Fill with N/A for missing INDEC data
+                for key in [
+                    "indec_tn_nivel_general",
+                    "indec_tn_estacionales",
+                    "indec_tn_regulados",
+                    "indec_tn_nucleo",
+                    "indec_gba_nivel_general",
+                    "indec_gba_estacionales",
+                    "indec_gba_regulados",
+                    "indec_gba_nucleo",
+                ]:
+                    cpi_data[key].append(["N/A"])
+
+            # CABA data
+            if caba_idx is not None:
+                cpi_data["caba_idx_nivel_general"].append(caba_idx_ng[caba_idx])
+                cpi_data["caba_idx_estacionales"].append(caba_idx_est[caba_idx])
+                cpi_data["caba_idx_regulados"].append(caba_idx_reg[caba_idx])
+                cpi_data["caba_idx_resto"].append(caba_idx_resto[caba_idx])
+                cpi_data["caba_var_nivel_general"].append(caba_var_ng[caba_idx])
+                cpi_data["caba_var_estacionales"].append(caba_var_est[caba_idx])
+                cpi_data["caba_var_regulados"].append(caba_var_reg[caba_idx])
+                cpi_data["caba_var_resto"].append(caba_var_resto[caba_idx])
+            else:
+                # Fill with N/A for missing CABA data
+                for key in [
+                    "caba_idx_nivel_general",
+                    "caba_idx_estacionales",
+                    "caba_idx_regulados",
+                    "caba_idx_resto",
+                    "caba_var_nivel_general",
+                    "caba_var_estacionales",
+                    "caba_var_regulados",
+                    "caba_var_resto",
+                ]:
+                    cpi_data[key].append(["N/A"])
+
+        logger.info(f"Fetched CPI data: {len(sorted_dates)} unique dates")
+
+    except Exception as e:
+        logger.error(f"Failed to fetch CPI data: {e}")
+        cpi_data = None
+
+    update_sheets(cer, ccl, spy, inflacion, rem_reports, cpi_data)
     print("Dataset updated successfully")
 
 

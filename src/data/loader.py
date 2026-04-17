@@ -1,9 +1,8 @@
 """Módulo para cargar y parsear datos de archivos .txt."""
 
-from datetime import datetime, date
+from datetime import date
 from pathlib import Path
-from typing import List, Dict, Tuple, Optional
-import re
+from typing import List, Dict, Optional
 
 
 def parse_currency(value: str) -> float:
@@ -69,11 +68,13 @@ def load_sueldo_data(file_path: str = "sueldo.txt") -> List[Dict]:
                 continue
 
             try:
-                data.append({
-                    "periodo": periodo,
-                    "fecha": parse_date(fecha_str),
-                    "bruto": parse_currency(bruto_str),
-                })
+                data.append(
+                    {
+                        "periodo": periodo,
+                        "fecha": parse_date(fecha_str),
+                        "bruto": parse_currency(bruto_str),
+                    }
+                )
             except (ValueError, IndexError) as e:
                 print(f"Error parseando línea '{line}': {e}")
                 continue
@@ -114,10 +115,12 @@ def load_cer_data(file_path: str = "cer.txt") -> List[Dict]:
                 continue
 
             try:
-                data.append({
-                    "fecha": parse_date(fecha_str),
-                    "cer": float(cer_str),
-                })
+                data.append(
+                    {
+                        "fecha": parse_date(fecha_str),
+                        "cer": float(cer_str),
+                    }
+                )
             except (ValueError, IndexError) as e:
                 print(f"Error parseando línea '{line}': {e}")
                 continue
@@ -154,7 +157,9 @@ def load_inflacion_data(file_path: str = "inflacion.txt") -> List[float]:
     return data
 
 
-def get_cer_for_date(cer_data: List[Dict], target_date: date, allow_future: bool = False) -> Optional[float]:
+def get_cer_for_date(
+    cer_data: List[Dict], target_date: date, allow_future: bool = False
+) -> Optional[float]:
     """Obtiene el valor CER para una fecha específica usando VLOOKUP.
 
     Si no hay valor exacto, retorna el último valor disponible antes de esa fecha.
@@ -193,7 +198,9 @@ def get_cer_for_date(cer_data: List[Dict], target_date: date, allow_future: bool
     return last_cer if last_cer > 0 else None
 
 
-def get_cer_for_periodo(periodo: str, cer_data: List[Dict], allow_future: bool = False) -> Optional[float]:
+def get_cer_for_periodo(
+    periodo: str, cer_data: List[Dict], allow_future: bool = False
+) -> Optional[float]:
     """Obtiene el CER para un periodo trabajado.
 
     El CER se publica con delay de ~30 días (t-1):
@@ -209,9 +216,18 @@ def get_cer_for_periodo(periodo: str, cer_data: List[Dict], allow_future: bool =
         Valor CER o None si no hay datos
     """
     MESES = {
-        "enero": 1, "febrero": 2, "marzo": 3, "abril": 4,
-        "mayo": 5, "junio": 6, "julio": 7, "agosto": 8,
-        "septiembre": 9, "octubre": 10, "noviembre": 11, "diciembre": 12,
+        "enero": 1,
+        "febrero": 2,
+        "marzo": 3,
+        "abril": 4,
+        "mayo": 5,
+        "junio": 6,
+        "julio": 7,
+        "agosto": 8,
+        "septiembre": 9,
+        "octubre": 10,
+        "noviembre": 11,
+        "diciembre": 12,
     }
 
     # Parsear periodo
@@ -265,6 +281,7 @@ def get_cer_base_date(periodo_fecha: date) -> date:
 
     # +15 días
     from datetime import timedelta
+
     return eomonth + timedelta(days=15)
 
 

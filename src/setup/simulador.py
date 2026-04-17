@@ -23,7 +23,6 @@ def setup_simulador(ss: gspread.Spreadsheet) -> None:
 
     # Row 3: Ejemplo/Placeholder (dejamos la fila 2 vacía por estética)
     # El usuario debería llenar A3, B3, C3
-    placeholder = [3, 2026, 0.029, "Pendiente de ejecutar script"]
     ws.update(range_name="A3:D3", values=[[3, 2026, 0.029, "Esperando script..."]])
 
     header_bg = COLORS["header_bg"]
