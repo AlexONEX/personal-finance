@@ -282,7 +282,8 @@ def update_sheets(
         # (dates, indec_tn_ng, indec_tn_est, indec_tn_reg, indec_tn_nuc,
         #  indec_gba_ng, indec_gba_est, indec_gba_reg, indec_gba_nuc,
         #  caba_idx_ng, caba_idx_est, caba_idx_reg, caba_idx_resto,
-        #  caba_var_ng, caba_var_est, caba_var_reg, caba_var_resto)
+        #  caba_var_ng, caba_var_est, caba_var_reg, caba_var_resto,
+        #  usa_cpi_index, usa_variation)
 
         dates = cpi_data.get("dates", [])
         if dates:
@@ -343,12 +344,19 @@ def update_sheets(
                     cpi_data["caba_var_resto"][i][0]
                     if i < len(cpi_data.get("caba_var_resto", []))
                     else "N/A",  # Q
+                    # USA
+                    cpi_data["usa_cpi_index"][i][0]
+                    if i < len(cpi_data.get("usa_cpi_index", []))
+                    else "N/A",  # R
+                    cpi_data["usa_variation"][i][0]
+                    if i < len(cpi_data.get("usa_variation", []))
+                    else "N/A",  # S
                 ]
                 payload.append(row)
 
             # Write to sheet starting at row 4
             ws_cpi.update(
-                range_name=f"A4:Q{3 + len(payload)}",
+                range_name=f"A4:S{3 + len(payload)}",
                 values=payload,
                 value_input_option="USER_ENTERED",
             )
@@ -492,6 +500,7 @@ def main():
             date_row[0]: idx for idx, date_row in enumerate(indec_dates)
         }
         caba_date_to_idx = {date_row[0]: idx for idx, date_row in enumerate(caba_dates)}
+        usa_date_to_idx = {date_row[0]: idx for idx, date_row in enumerate(usa_dates)}
 
         # Build merged data structure
         cpi_data = {
@@ -512,11 +521,14 @@ def main():
             "caba_var_estacionales": [],
             "caba_var_regulados": [],
             "caba_var_resto": [],
+            "usa_cpi_index": [],
+            "usa_variation": [],
         }
 
         for date_str in sorted_dates:
             indec_idx = indec_date_to_idx.get(date_str)
             caba_idx = caba_date_to_idx.get(date_str)
+            usa_idx = usa_date_to_idx.get(date_str)
 
             # INDEC data
             if indec_idx is not None:
@@ -565,6 +577,15 @@ def main():
                     "caba_var_resto",
                 ]:
                     cpi_data[key].append(["N/A"])
+
+            # USA data
+            if usa_idx is not None:
+                cpi_data["usa_cpi_index"].append(usa_indices[usa_idx])
+                cpi_data["usa_variation"].append(usa_variations[usa_idx])
+            else:
+                # Fill with N/A for missing USA data
+                cpi_data["usa_cpi_index"].append(["N/A"])
+                cpi_data["usa_variation"].append(["N/A"])
 
         logger.info(f"Fetched CPI data: {len(sorted_dates)} unique dates")
 
