@@ -14,6 +14,7 @@ CPI_GROUPS = [
     ("F", "I", "INDEC - GBA"),
     ("J", "M", "CABA - ÍNDICES"),
     ("N", "Q", "CABA - VARIACIONES"),
+    ("R", "S", "USA"),
 ]
 
 CPI_COLUMNS = [
@@ -38,6 +39,9 @@ CPI_COLUMNS = [
     ("O", "Estacionales %"),
     ("P", "Regulados %"),
     ("Q", "Resto %"),
+    # USA
+    ("R", "CPI Index"),
+    ("S", "Variación MoM %"),
 ]
 
 CPI_FORMATS = {
@@ -61,6 +65,9 @@ CPI_FORMATS = {
     "O": {"type": "PERCENT", "pattern": "0.00%"},
     "P": {"type": "PERCENT", "pattern": "0.00%"},
     "Q": {"type": "PERCENT", "pattern": "0.00%"},
+    # USA - CPI index and variation
+    "R": {"type": "NUMBER", "pattern": "#,##0.00"},
+    "S": {"type": "PERCENT", "pattern": "0.00%"},
 }
 
 

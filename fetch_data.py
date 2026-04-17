@@ -23,6 +23,7 @@ from src.fetchers import (
     InflacionMensualFetcher,
     REMFetcher,
     SPYFetcher,
+    USACPIFetcher,
 )
 
 # Suppress only InsecureRequestWarning for BCRA (they have cert issues)
@@ -423,7 +424,7 @@ def main():
     )
 
     # Fetch CPI data
-    logger.info("Fetching CPI data from INDEC and CABA...")
+    logger.info("Fetching CPI data from INDEC, CABA, and USA...")
     cpi_data = {}
     try:
         # Fetch INDEC data
@@ -452,15 +453,34 @@ def main():
             caba_var_resto,
         ) = caba_cpi_fetcher.fetch(since_dt.strftime("%Y-%m-%d"))
 
-        # Merge dates from both sources
+        # Fetch USA data
+        fred_api_key = os.environ.get("FRED_API_KEY")
+        if fred_api_key:
+            usa_cpi_fetcher = USACPIFetcher(api_key=fred_api_key)
+            usa_dates, usa_indices, usa_variations = usa_cpi_fetcher.fetch(
+                since_dt.strftime("%Y-%m-%d")
+            )
+            logger.info(f"USA CPI: Fetched {len(usa_dates)} records")
+        else:
+            logger.warning(
+                "FRED_API_KEY not found in environment. Skipping USA CPI data."
+            )
+            usa_dates, usa_indices, usa_variations = [], [], []
+
+        # Merge dates from all sources
         all_dates_dict = {}
         for date_row in indec_dates:
-            all_dates_dict[date_row[0]] = {"indec": True, "caba": False}
+            all_dates_dict[date_row[0]] = {"indec": True, "caba": False, "usa": False}
         for date_row in caba_dates:
             if date_row[0] in all_dates_dict:
                 all_dates_dict[date_row[0]]["caba"] = True
             else:
-                all_dates_dict[date_row[0]] = {"indec": False, "caba": True}
+                all_dates_dict[date_row[0]] = {"indec": False, "caba": True, "usa": False}
+        for date_row in usa_dates:
+            if date_row[0] in all_dates_dict:
+                all_dates_dict[date_row[0]]["usa"] = True
+            else:
+                all_dates_dict[date_row[0]] = {"indec": False, "caba": False, "usa": True}
 
         # Sort dates
         sorted_dates = sorted(
