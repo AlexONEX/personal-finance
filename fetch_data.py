@@ -13,7 +13,7 @@ from datetime import date, datetime, timedelta
 
 from dotenv import load_dotenv
 
-from src.config import FETCH_CONFIG, MONTHS_MAP_SHORT, SHEET_LIMITS, SHEETS
+from src.config import FETCH_CONFIG, SHEET_LIMITS, SHEETS
 from src.connectors.sheets import get_sheets_client
 from src.fetchers import (
     CABACPIFetcher,
@@ -107,9 +107,9 @@ def get_last_date_from_sheet() -> date:
 
 
 def get_last_rem_date_from_sheet() -> tuple[int, int]:
-    """
-    Obtiene la última fecha (año, mes) de REM para actualizar solo datos posteriores.
-    Returns: (year, month) tuple, defaults to (2022, 1) if sheet is empty.
+    """Obtiene la última fecha (año, mes) de REM registrada en el sheet.
+
+    Returns: (year, month) tuple, defaults to BACKFILL_FROM if sheet is empty.
     """
     try:
         client = get_sheets_client()
@@ -119,28 +119,15 @@ def get_last_rem_date_from_sheet() -> tuple[int, int]:
 
         dates = []
         for row in existing_rows:
-            if len(row) >= 1 and row[0]:
-                date_str = row[0].strip()
-                try:
-                    # Try YYYY-MM-DD format first
-                    if "-" in date_str and len(date_str.split("-")[0]) == 4:
-                        parts = date_str.split("-")
-                        year = int(parts[0])
-                        month = int(parts[1])
-                        dates.append((year, month))
-                    # Try mmm-YY format (e.g., "ene-20")
-                    elif "-" in date_str and len(date_str.split("-")[0]) <= 3:
-                        parts = date_str.split("-")
-                        month_str = parts[0].lower()
-                        year_short = parts[1]
-
-                        if month_str in MONTHS_MAP_SHORT:
-                            month = MONTHS_MAP_SHORT[month_str]
-                            year = 2000 + int(year_short)
-                            dates.append((year, month))
-                except (ValueError, IndexError, KeyError) as e:
-                    logger.warning(f"Failed to parse REM date '{date_str}': {e}")
-                    continue
+            if not row or not row[0]:
+                continue
+            date_str = row[0].strip()
+            try:
+                if "-" in date_str and len(date_str.split("-")[0]) == 4:
+                    parts = date_str.split("-")
+                    dates.append((int(parts[0]), int(parts[1])))
+            except (ValueError, IndexError):
+                continue
 
         if dates:
             return max(dates)
@@ -227,40 +214,35 @@ def update_sheets(
             range_name="B1", values=[[timestamp]], value_input_option="USER_ENTERED"
         )
 
-        # Get raw values (dates as serial numbers) to compare correctly
-        existing_rem_raw = ws_r.get("A4:I", value_render_option="UNFORMATTED_VALUE")
+        existing_rem_raw = ws_r.get("A4:A", value_render_option="UNFORMATTED_VALUE")
         existing_rem_raw = existing_rem_raw if existing_rem_raw else []
 
-        # Convert serial dates to "YYYY-MM-DD" for comparison
-        # Google Sheets epoch is 1899-12-30
-        existing_months = set()
+        existing_months: set[str] = set()
         for row in existing_rem_raw:
             if len(row) >= 1 and row[0]:
                 val = row[0]
                 if isinstance(val, (int, float)):
-                    # Convert serial to date
                     d = date(1899, 12, 30) + timedelta(days=int(val))
                     existing_months.add(d.strftime("%Y-%m-%d"))
                 elif isinstance(val, str):
                     existing_months.add(val)
 
         new_reports = {
-            month: projs
-            for month, projs in rem_reports.items()
+            month: proj
+            for month, proj in rem_reports.items()
             if month not in existing_months
         }
 
         if new_reports:
-            # Count only rows with actual data (non-empty column A)
             rows_with_data = sum(
                 1 for row in existing_rem_raw if len(row) >= 1 and row[0]
             )
             next_row = 4 + rows_with_data
             sorted_new_months = sorted(new_reports.keys())
-            payload = [[m] + new_reports[m] for m in sorted_new_months]
+            payload = [[m, new_reports[m]] for m in sorted_new_months]
 
             ws_r.update(
-                range_name=f"A{next_row}:I{next_row + len(payload) - 1}",
+                range_name=f"A{next_row}:B{next_row + len(payload) - 1}",
                 values=payload,
                 value_input_option="USER_ENTERED",
             )
