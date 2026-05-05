@@ -140,10 +140,9 @@ INVERSIONES_COLUMN_FORMATS = {
 
 API_URLS = {
     "bcra_cer": "https://api.bcra.gob.ar/estadisticas/v4.0/Monetarias/30",
+    "bcra_monetarias": "https://api.bcra.gob.ar/estadisticas/v4.0/Monetarias",
     "ambito_ccl": "https://mercados.ambito.com//dolarrava/cl/grafico/{desde}/{hasta}",
     "dolarapi_ccl": "https://dolarapi.com/v1/dolares/contadoconliqui",
-    "bcra_rem_base": "https://www.bcra.gob.ar",
-    "bcra_rem_publications": "https://www.bcra.gob.ar/todos-relevamiento-de-expectativas-de-mercado-rem/",
 }
 
 # Configuración de fetching
