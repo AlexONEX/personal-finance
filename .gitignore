@@ -41,3 +41,4 @@ portfolio_evolution.csv
 
 # Test scripts (may contain account-specific data)
 test_*.py
+backend/personal-finance.db
