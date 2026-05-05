@@ -15,6 +15,13 @@ from dotenv import load_dotenv
 
 from src.config import FETCH_CONFIG, MONTHS_MAP_SHORT, SHEET_LIMITS, SHEETS
 from src.connectors.sheets import get_sheets_client
+from src.db.writer import (
+    get_last_date_from_db,
+    get_last_rem_date_from_db,
+    write_cpi_to_db,
+    write_historic_to_db,
+    write_rem_to_db,
+)
 from src.fetchers import (
     CABACPIFetcher,
     CCLFetcher,
@@ -393,7 +400,7 @@ def main():
             logger.error("Start date seems unreasonably old (before 2000)")
             return
     else:
-        since_dt = get_last_date_from_sheet()
+        since_dt = get_last_date_from_db()
 
     today = date.today()
     until_dt_future = today + timedelta(days=45)
@@ -424,7 +431,7 @@ def main():
         spy = future_spy.result()
         inflacion = future_inflacion.result()
 
-    last_rem_date = get_last_rem_date_from_sheet()
+    last_rem_date = get_last_rem_date_from_db()
     logger.info(f"Last REM date in sheet: {last_rem_date[0]}-{last_rem_date[1]:02d}")
     rem_reports = rem_fetcher.fetch(last_rem_date)
     logger.info(
@@ -594,6 +601,12 @@ def main():
         cpi_data = None
 
     update_sheets(cer, ccl, spy, inflacion, rem_reports, cpi_data)
+
+    write_historic_to_db(cer, ccl, spy, inflacion)
+    if cpi_data:
+        write_cpi_to_db(cpi_data)
+    write_rem_to_db(rem_reports)
+
     print("Dataset updated successfully")
 
 

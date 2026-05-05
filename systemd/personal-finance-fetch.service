@@ -1,0 +1,16 @@
+[Unit]
+Description=Personal Finance — daily data fetch (CER, CCL, SPY, CPI, REM)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=alex
+WorkingDirectory=/srv/repos/personal-finance
+EnvironmentFile=/srv/repos/personal-finance/.env
+ExecStart=/srv/repos/personal-finance/.venv/bin/python fetch_data.py
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
