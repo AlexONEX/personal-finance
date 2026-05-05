@@ -1,0 +1,10 @@
+[Unit]
+Description=Personal Finance — daily data fetch timer
+
+[Timer]
+OnCalendar=*-*-* 08:00:00
+RandomizedDelaySec=300
+Persistent=true
+
+[Install]
+WantedBy=timers.target
