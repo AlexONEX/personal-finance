@@ -1,4 +1,4 @@
-import { enrichEntries, ars, periodo } from './compute.js';
+import { enrichEntries, ars, periodo, fechaCorta } from './compute.js';
 import { api } from './api.js';
 import { showToast, reload } from './app.js';
 
@@ -14,7 +14,7 @@ export function renderSalary(raw) {
   tbody.innerHTML = entries.map(e => `
     <tr data-id="${e.id}" class="${e.ascenso ? 'row-ascenso' : ''}">
       <td>${periodo(e.fecha)}</td>
-      <td class="input-col">${e.fecha}</td>
+      <td class="input-col">${fechaCorta(e.fecha)}</td>
       <td class="num input-col">${ars(e.bruto)}</td>
       <td class="num calc">${ars(e.jubilacion)}</td>
       <td class="num calc">${ars(e.pami)}</td>

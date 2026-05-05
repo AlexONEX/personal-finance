@@ -49,7 +49,13 @@ export function enrichEntries(raw) {
 
 export function ars(n) {
   if (n == null) return '—';
-  return new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(n);
+  return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
+}
+
+export function fechaCorta(dateStr) {
+  if (!dateStr) return '—';
+  const [y, m, d] = dateStr.split('-');
+  return `${d}-${m}-${y.slice(2)}`;
 }
 
 export function pct(n) {
