@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from sqlalchemy import Date, Float, String
+from sqlalchemy import Boolean, Date, Float, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -19,4 +19,5 @@ class SalaryEntry(Base):
     tarjeta_corporativa: Mapped[float | None] = mapped_column(Float, nullable=True)
     otros_beneficios: Mapped[float | None] = mapped_column(Float, nullable=True)
     horas_diarias: Mapped[float | None] = mapped_column(Float, nullable=True)
+    ascenso: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     notes: Mapped[str | None] = mapped_column(String, nullable=True)

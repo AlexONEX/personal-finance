@@ -38,18 +38,9 @@ export function enrichEntries(raw) {
       total_neto: totalNeto,
       bruto_hora: brutoHora,
       neto_hora: netoHora,
-      ascenso: false,
-      aumento: null,
+      ascenso: e.ascenso ?? false, // stored in DB, not computed
     };
   });
-
-  // Ascenso / aumento vs mes anterior
-  for (let i = 1; i < entries.length; i++) {
-    if (entries[i].bruto > entries[i - 1].bruto) {
-      entries[i].ascenso = true;
-      entries[i].aumento = ((entries[i].bruto - entries[i - 1].bruto) / entries[i - 1].bruto) * 100;
-    }
-  }
 
   return entries; // ascending order
 }

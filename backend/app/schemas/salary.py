@@ -14,6 +14,7 @@ class SalaryEntryBase(BaseModel):
     tarjeta_corporativa: Annotated[float, Field(ge=0)] | None = None
     otros_beneficios: Annotated[float, Field(ge=0)] | None = None
     horas_diarias: Annotated[float, Field(gt=0, le=24)] | None = None
+    ascenso: bool = False
     notes: str | None = None
 
 
@@ -28,6 +29,7 @@ class SalaryEntryUpdate(BaseModel):
     tarjeta_corporativa: Annotated[float, Field(ge=0)] | None = None
     otros_beneficios: Annotated[float, Field(ge=0)] | None = None
     horas_diarias: Annotated[float, Field(gt=0, le=24)] | None = None
+    ascenso: bool | None = None
     notes: str | None = None
 
 

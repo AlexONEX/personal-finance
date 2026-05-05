@@ -169,7 +169,7 @@ table {
   font-size: 13px;
 }
 
-thead { position: sticky; top: 52px; z-index: 5; }
+thead { background: #f8fafc; }
 
 th {
   padding: 0.5rem 0.75rem;

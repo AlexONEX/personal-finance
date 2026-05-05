@@ -1,11 +1,11 @@
-import { enrichEntries, ars, pct, periodo } from './compute.js';
+import { enrichEntries, ars, periodo } from './compute.js';
 import { api } from './api.js';
 import { showToast, reload } from './app.js';
 
 export function renderSalary(raw) {
   const tbody = document.getElementById('salary-body');
   if (!raw.length) {
-    tbody.innerHTML = '<tr><td colspan="19" class="empty">Sin datos. Agregá tu primer sueldo.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="18" class="empty">Sin datos. Agregá tu primer sueldo.</td></tr>';
     return;
   }
 
@@ -29,8 +29,7 @@ export function renderSalary(raw) {
       <td class="num input-col">${e.horas_diarias ?? '—'}</td>
       <td class="num calc">${e.bruto_hora ? ars(e.bruto_hora) : '—'}</td>
       <td class="num calc">${e.neto_hora  ? ars(e.neto_hora)  : '—'}</td>
-      <td class="center">${e.ascenso ? '↑' : ''}</td>
-      <td class="num ${e.aumento ? 'green' : ''}">${e.aumento ? pct(e.aumento) : '—'}</td>
+      <td class="center"><input type="checkbox" class="chk-ascenso" data-id="${e.id}" ${e.ascenso ? 'checked' : ''}></td>
       <td>
         <button class="btn-edit" data-id="${e.id}" title="Editar">✎</button>
         <button class="btn-del"  data-id="${e.id}" title="Eliminar">×</button>
@@ -60,6 +59,19 @@ export function renderSalary(raw) {
       const entry = raw.find(e => String(e.id) === btn.dataset.id);
       if (!entry) return;
       fillForm(entry);
+    });
+  });
+
+  // Ascenso toggle
+  tbody.querySelectorAll('.chk-ascenso').forEach(chk => {
+    chk.addEventListener('change', async () => {
+      try {
+        await api.salary.update(chk.dataset.id, { ascenso: chk.checked });
+        reload();
+      } catch (err) {
+        showToast(`Error: ${err.message}`);
+        chk.checked = !chk.checked;
+      }
     });
   });
 }
