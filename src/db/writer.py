@@ -1,9 +1,3 @@
-"""Dual-write helpers: persist fetcher data to SQLite alongside Google Sheets.
-
-Uses SQLAlchemy Core (no ORM) with a lazy engine so DATABASE_URL is read from
-the environment after load_dotenv() has been called by the caller.
-"""
-
 import logging
 import os
 from datetime import date, datetime, timedelta
@@ -75,7 +69,6 @@ def _get_engine() -> Engine:
 
 
 def get_last_date_from_db() -> date:
-    """Última fecha en historic_data, retrocedida 7 días para reescribir datos recientes."""
     with _get_engine().connect() as conn:
         result = conn.execute(select(func.max(_historic.c.date))).scalar()
     if result:
@@ -84,7 +77,6 @@ def get_last_date_from_db() -> date:
 
 
 def get_last_rem_date_from_db() -> tuple[int, int]:
-    """Último mes (año, mes) en rem_projections."""
     with _get_engine().connect() as conn:
         result = conn.execute(select(func.max(_rem.c.publication_date))).scalar()
     if result:
@@ -98,7 +90,6 @@ def write_historic_to_db(
     spy_data: dict[date, float],
     inflacion_data: dict[date, float],
 ) -> None:
-    """Upsert en historic_data. Preserva valores existentes cuando el nuevo es None."""
     all_dates = set(cer_data) | set(ccl_data) | set(spy_data) | set(inflacion_data)
     if not all_dates:
         return
@@ -147,7 +138,6 @@ def _cpi_float(cpi_data: dict, key: str, i: int) -> float | None:
 
 
 def write_cpi_to_db(cpi_data: dict) -> None:
-    """Upsert en cpi_data desde el dict consolidado producido por fetch_data."""
     dates_rows = cpi_data.get("dates", [])
     if not dates_rows:
         return
@@ -191,7 +181,6 @@ def write_cpi_to_db(cpi_data: dict) -> None:
 
 
 def write_rem_to_db(rem_reports: dict[str, list[float]]) -> None:
-    """Upsert en rem_projections desde el dict de REMFetcher."""
     if not rem_reports:
         return
 
