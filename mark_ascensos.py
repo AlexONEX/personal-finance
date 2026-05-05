@@ -47,10 +47,10 @@ for i, fecha_str in enumerate(fechas):
 
     try:
         fecha = datetime.strptime(fecha_str, "%d/%m/%Y")
-    except:
+    except ValueError:
         try:
             fecha = datetime.strptime(fecha_str, "%Y-%m-%d")
-        except:
+        except ValueError:
             continue
 
     # Check if this date is an ascenso

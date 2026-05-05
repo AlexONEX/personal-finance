@@ -20,6 +20,7 @@ SHEETS = {
     "ANALISIS_ARS": "Análisis ARS",
     "ANALISIS_USD": "Análisis USD",
     "SIMULADOR_INFLACION": "Simulador_Inflacion",
+    "CPI": "CPI",
 }
 
 # =============================================================================

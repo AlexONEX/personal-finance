@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finanzas</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Finanzas</h1>
+    <nav>
+      <button class="tab-btn active" data-tab="ingresos">Ingresos</button>
+      <button class="tab-btn" data-tab="analisis">Análisis ARS</button>
+      <button class="tab-btn" data-tab="dashboard">Dashboard</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ── INGRESOS ── -->
+    <div id="ingresos" class="tab active">
+      <div class="toolbar">
+        <button id="btn-add" class="btn-primary">+ Agregar</button>
+      </div>
+
+      <form id="salary-form" class="entry-form hidden">
+        <h3 id="form-title">Nueva entrada</h3>
+        <div class="form-grid">
+          <label>Fecha <input type="date" name="fecha" required /></label>
+          <label>Bruto <input type="number" name="bruto" min="0" step="1" required /></label>
+          <label>SAC Bruto <input type="number" name="sac_bruto" min="0" step="1" /></label>
+          <label>Bono Neto <input type="number" name="bono_neto" min="0" step="1" /></label>
+          <label>Tarjeta Corp. <input type="number" name="tarjeta_corporativa" min="0" step="1" /></label>
+          <label>Otros Beneficios <input type="number" name="otros_beneficios" min="0" step="1" /></label>
+          <label>Horas Diarias <input type="number" name="horas_diarias" min="1" max="24" step="0.5" /></label>
+        </div>
+        <div class="form-actions">
+          <input type="hidden" name="entry_id" />
+          <button type="submit" class="btn-primary">Guardar</button>
+          <button type="button" id="btn-cancel" class="btn-secondary">Cancelar</button>
+        </div>
+      </form>
+
+      <div class="table-scroll">
+        <table id="salary-table">
+          <thead>
+            <tr class="group-row">
+              <th class="g-periodo">PERIODO</th>
+              <th class="g-sueldo" colspan="6">SUELDO</th>
+              <th class="g-aguinaldo" colspan="2">AGUINALDO</th>
+              <th class="g-bonos">BONOS</th>
+              <th class="g-beneficios" colspan="2">BENEFICIOS</th>
+              <th class="g-total">TOTAL</th>
+              <th class="g-hora" colspan="3">VALOR/HORA</th>
+              <th class="g-ascenso">ASCENSO</th>
+              <th></th>
+            </tr>
+            <tr class="col-row">
+              <th>Periodo Abonado</th>
+              <th class="input-col">Fecha</th>
+              <th class="input-col">Bruto</th>
+              <th>Jubilación</th>
+              <th>PAMI</th>
+              <th>Obra Social</th>
+              <th class="bold-col">Neto</th>
+              <th class="input-col">SAC Bruto</th>
+              <th>SAC Neto</th>
+              <th class="input-col">Bono Neto</th>
+              <th class="input-col">Tarjeta Corp.</th>
+              <th class="input-col">Otros Ben.</th>
+              <th class="bold-col">Total Neto</th>
+              <th class="input-col">Horas</th>
+              <th>Bruto/Hora</th>
+              <th>Neto/Hora</th>
+              <th>Ascenso</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="salary-body">
+            <tr><td colspan="18" class="empty">Cargando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── ANÁLISIS ARS ── -->
+    <div id="analisis" class="tab hidden">
+      <div class="table-scroll">
+        <table id="analysis-table">
+          <thead>
+            <tr>
+              <th>Periodo</th>
+              <th>Bruto ARS</th>
+              <th>Neto ARS</th>
+              <th>Total Neto</th>
+              <th>Var. Bruto MoM</th>
+              <th>Var. Neto MoM</th>
+              <th>Meses desde último aumento</th>
+            </tr>
+          </thead>
+          <tbody id="analysis-body">
+            <tr><td colspan="7" class="empty">Cargando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── DASHBOARD ── -->
+    <div id="dashboard" class="tab hidden">
+      <div id="summary-cards" class="cards"></div>
+      <div class="charts-grid">
+        <div class="chart-box">
+          <h3>Evolución salarial</h3>
+          <canvas id="chart-evolution"></canvas>
+        </div>
+        <div class="chart-box">
+          <h3>Desglose último período</h3>
+          <canvas id="chart-breakdown"></canvas>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

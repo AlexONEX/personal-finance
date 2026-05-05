@@ -8,6 +8,7 @@ Estructura:
 - ingresos.py: Setup de hoja principal de ingresos
 - inversiones.py: Setup de hoja de inversiones
 - analisis.py: Setup de hojas Análisis ARS/USD
+- cpi.py: Setup de hoja CPI
 """
 
 from src.setup.analisis import setup_analisis_ars, setup_analisis_usd
@@ -17,6 +18,7 @@ from src.setup.ingresos import setup_ingresos
 from src.setup.inversiones import setup_inversiones
 from src.setup.rem import setup_rem
 from src.setup.simulador import setup_simulador
+from src.setup.cpi import setup_cpi
 from src.setup.utils import apply_formatting, col_idx, get_or_create_worksheet
 
 __all__ = [
@@ -31,4 +33,5 @@ __all__ = [
     "setup_analisis_ars",
     "setup_analisis_usd",
     "setup_simulador",
+    "setup_cpi",
 ]
