@@ -180,14 +180,12 @@ def write_cpi_to_db(cpi_data: dict) -> None:
     logger.info(f"DB: upserted {len(rows)} cpi_data rows")
 
 
-def write_rem_to_db(rem_reports: dict[str, list[float]]) -> None:
+def write_rem_to_db(rem_reports: dict[str, float]) -> None:
     if not rem_reports:
         return
 
     rows = []
-    for month_key, projections in rem_reports.items():
-        if len(projections) < 8:
-            continue
+    for month_key, projection in rem_reports.items():
         try:
             pub_date = date.fromisoformat(month_key)
         except ValueError:
@@ -195,14 +193,14 @@ def write_rem_to_db(rem_reports: dict[str, list[float]]) -> None:
         rows.append(
             {
                 "publication_date": pub_date,
-                "m0": projections[0],
-                "m1": projections[1],
-                "m2": projections[2],
-                "m3": projections[3],
-                "m4": projections[4],
-                "m5": projections[5],
-                "m6": projections[6],
-                "m12": projections[7],
+                "m0": None,
+                "m1": None,
+                "m2": None,
+                "m3": None,
+                "m4": None,
+                "m5": None,
+                "m6": None,
+                "m12": projection,
             }
         )
 
