@@ -1,59 +1,165 @@
 """Fetcher para REM (Relevamiento de Expectativas de Mercado) del BCRA.
 
-Usa la API REST del BCRA (variable 29: mediana IPC interanual próximos 12 meses).
+Realiza web scraping de publicaciones mensuales del BCRA y parsea archivos Excel
+para extraer proyecciones de inflación.
 """
 
+import io
 import logging
-from datetime import date
 
+import openpyxl
 import requests
-import urllib3
+from bs4 import BeautifulSoup
 
-from src.config import API_URLS, FETCH_CONFIG
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+from src.config import API_URLS, FETCH_CONFIG, MONTHS_MAP
 
 logger = logging.getLogger(__name__)
 
-_REM_12M_VAR_ID = 29
-
 
 class REMFetcher:
-    """Obtiene la proyección REM de inflación interanual 12m desde la API del BCRA."""
+    """Obtiene proyecciones de inflación REM desde publicaciones del BCRA.
 
-    def fetch(self, since_date: tuple[int, int]) -> dict[str, float]:
-        """Obtiene proyecciones REM de inflación interanual a 12 meses.
+    Nota: No implementa DataSource porque devuelve un formato diferente
+    (dict[str, list[float]] en lugar de dict[date, float]).
+    """
+
+    def fetch(self, since_date: tuple[int, int]) -> dict[str, list[float]]:
+        """Obtiene reportes REM desde una fecha específica.
 
         Args:
             since_date: Tupla (año, mes) desde donde obtener datos
 
         Returns:
-            Diccionario de "YYYY-MM-01" -> proyección en decimal (ej: 0.238 para 23.8%)
-        """
-        year, month = since_date
-        desde = date(year, month, 1).strftime("%Y-%m-%d")
-        hasta = date.today().strftime("%Y-%m-%d")
-        url = f"{API_URLS['bcra_monetarias']}/{_REM_12M_VAR_ID}"
+            Diccionario de "YYYY-MM-DD" -> lista de 8 proyecciones
+            [M, M+1, M+2, M+3, M+4, M+5, M+6, 12m]
 
+        Note:
+            Los datos de inflación que trae BCRA son nominales (ej: 3% = 3),
+            los dividimos por 100 para dejarlo en formato decimal (0.03).
+        """
+        links = self._get_publication_links(since_date)
+        reports = {}
+
+        for pub in links:
+            xlsx_url = self._get_xlsx_from_publication(pub["url"])
+            if xlsx_url:
+                projections = self._download_and_parse_excel(xlsx_url)
+                if projections:
+                    month_key = f"{pub['date'][0]}-{pub['date'][1]:02d}-01"
+                    reports[month_key] = projections
+
+        logger.info(f"REM: fetched {len(reports)} reports since {since_date}")
+
+        return reports
+
+    def _get_publication_links(
+        self, since_date: tuple[int, int]
+    ) -> list[dict[str, any]]:
+        """Obtiene links de publicaciones REM desde la API JSON del BCRA.
+
+        La página de publicaciones renderiza la tabla por JS; este endpoint es
+        el que ese widget consume (`data-module="publicaciones-tabla"`).
+        """
         try:
             r = requests.get(
-                url,
-                params={"desde": desde, "hasta": hasta, "limit": 100},
+                API_URLS["bcra_rem_publications"],
+                params={"category": "rem", "lang": "es", "action": "total"},
                 timeout=FETCH_CONFIG["timeout_seconds"],
-                verify=False,
+                verify=False,  # BCRA has cert issues
             )
             r.raise_for_status()
+            publicaciones = r.json()["data"]["publicaciones"]
+        except (requests.exceptions.RequestException, KeyError, ValueError) as e:
+            logger.error(f"REM: failed to fetch publication list: {e}")
+            return []
+
+        links = []
+        for pub in publicaciones:
+            period_text = pub.get("periodo", "")
+            try:
+                m_text, y_text = period_text.split()
+                period_date = (int(y_text), MONTHS_MAP[m_text.lower()])
+
+                if period_date < since_date:
+                    continue
+
+                links.append(
+                    {"url": pub["url"], "date": period_date, "period": period_text}
+                )
+
+            except (ValueError, KeyError):
+                continue
+
+        return sorted(links, key=lambda x: x["date"])
+
+    def _get_xlsx_from_publication(self, pub_url: str) -> str | None:
+        """Extrae URL del archivo Excel desde una página de publicación."""
+        try:
+            r = requests.get(
+                pub_url, timeout=FETCH_CONFIG["timeout_seconds"], verify=False
+            )
+            r.raise_for_status()
+            soup = BeautifulSoup(r.text, "html.parser")
+
+            for link in soup.find_all("a", href=True):
+                text, href = link.get_text().lower(), link["href"].lower()
+                if ("tablas" in text or "tablas" in href) and href.endswith(".xlsx"):
+                    xlsx_url = link["href"]
+                    if not xlsx_url.startswith("http"):
+                        xlsx_url = API_URLS["bcra_rem_base"] + xlsx_url
+
+                    # Fix for BCRA bug: redirect internal dev links to production
+                    if "desa.bcra.net" in xlsx_url:
+                        xlsx_url = xlsx_url.replace(
+                            "sitiopublico.desa.bcra.net", "www.bcra.gob.ar"
+                        )
+                    return xlsx_url
+
         except requests.exceptions.RequestException as e:
-            logger.error(f"REM: failed to fetch from BCRA API: {e}")
-            return {}
+            logger.warning(f"REM: failed to fetch publication page {pub_url}: {e}")
+        except Exception as e:
+            logger.warning(f"REM: failed to parse publication page {pub_url}: {e}")
 
-        results: dict[str, float] = {}
-        for item in r.json().get("results", []):
-            for entry in item.get("detalle", []):
-                fecha_str: str = entry["fecha"]  # "YYYY-MM-DD" (último día del mes)
-                year_m, month_m = int(fecha_str[:4]), int(fecha_str[5:7])
-                month_key = f"{year_m}-{month_m:02d}-01"
-                results[month_key] = float(entry["valor"]) / 100.0
+        return None
 
-        logger.info(f"REM: fetched {len(results)} records since {since_date}")
-        return results
+    def _download_and_parse_excel(self, url: str) -> list[float]:
+        """Descarga y parsea archivo Excel de proyecciones REM."""
+        try:
+            r = requests.get(url, timeout=FETCH_CONFIG["timeout_seconds"], verify=False)
+            r.raise_for_status()
+
+            wb = openpyxl.load_workbook(io.BytesIO(r.content), data_only=True)
+            sheet = wb.worksheets[0]
+
+            projections = []
+            for row in range(7, 14):  # M a M+6
+                val = sheet.cell(row=row, column=4).value
+                if val is not None:
+                    try:
+                        projections.append(float(val) / 100.0)
+                    except (ValueError, TypeError) as e:
+                        logger.warning(
+                            f"REM: invalid projection value at row {row}: {val} ({e})"
+                        )
+                        projections.append(0.0)
+                else:
+                    projections.append(0.0)
+
+            val_12m = sheet.cell(row=14, column=4).value
+            if val_12m is not None:
+                try:
+                    projections.append(float(val_12m) / 100.0)
+                except (ValueError, TypeError) as e:
+                    logger.warning(f"REM: invalid 12m projection: {val_12m} ({e})")
+                    projections.append(0.0)
+            else:
+                projections.append(0.0)
+
+            return projections
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"REM: failed to download XLSX from {url}: {e}")
+            return []
+        except Exception as e:
+            logger.error(f"REM: failed to parse XLSX from {url}: {e}")
+            return []
