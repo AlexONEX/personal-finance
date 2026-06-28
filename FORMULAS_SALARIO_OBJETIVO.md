@@ -80,10 +80,10 @@ CER al momento del último ascenso. Mismo SCAN pero acumula el CER de cada fila 
 ### H — Objetivo 1m Neto/Hora
 > **Q3: ¿Cuánto debería ganar en 1 mes?**
 
-Usa REM M+1 (col 3).
+Usa REM M+1 (col 3). REM guarda primer día del mes → `DATE(YEAR,MONTH,1)` para match exacto.
 ```excel
 =ARRAYFORMULA(IF(C3:C="","-",IFERROR(
-  C3:C * (1+VLOOKUP(EOMONTH(B3:B,0),REM!$A$4:$I,3,FALSE)),
+  C3:C * (1+VLOOKUP(DATE(YEAR(B3:B),MONTH(B3:B),1),REM!$A$4:$I,3,FALSE)),
 "-")))
 ```
 
@@ -94,9 +94,9 @@ Compuesto REM M+1 × M+2 × M+3.
 ```excel
 =ARRAYFORMULA(IF(C3:C="","-",IFERROR(
   C3:C
-  * (1+IFERROR(VLOOKUP(EOMONTH(B3:B,0),REM!$A$4:$I,3,FALSE),0))
-  * (1+IFERROR(VLOOKUP(EOMONTH(B3:B,0),REM!$A$4:$I,4,FALSE),0))
-  * (1+IFERROR(VLOOKUP(EOMONTH(B3:B,0),REM!$A$4:$I,5,FALSE),0)),
+  * (1+IFERROR(VLOOKUP(DATE(YEAR(B3:B),MONTH(B3:B),1),REM!$A$4:$I,3,FALSE),0))
+  * (1+IFERROR(VLOOKUP(DATE(YEAR(B3:B),MONTH(B3:B),1),REM!$A$4:$I,4,FALSE),0))
+  * (1+IFERROR(VLOOKUP(DATE(YEAR(B3:B),MONTH(B3:B),1),REM!$A$4:$I,5,FALSE),0)),
 "-")))
 ```
 
@@ -107,12 +107,12 @@ Compuesto REM M+1 × … × M+6.
 ```excel
 =ARRAYFORMULA(IF(C3:C="","-",IFERROR(
   C3:C
-  * (1+IFERROR(VLOOKUP(EOMONTH(B3:B,0),REM!$A$4:$I,3,FALSE),0))
-  * (1+IFERROR(VLOOKUP(EOMONTH(B3:B,0),REM!$A$4:$I,4,FALSE),0))
-  * (1+IFERROR(VLOOKUP(EOMONTH(B3:B,0),REM!$A$4:$I,5,FALSE),0))
-  * (1+IFERROR(VLOOKUP(EOMONTH(B3:B,0),REM!$A$4:$I,6,FALSE),0))
-  * (1+IFERROR(VLOOKUP(EOMONTH(B3:B,0),REM!$A$4:$I,7,FALSE),0))
-  * (1+IFERROR(VLOOKUP(EOMONTH(B3:B,0),REM!$A$4:$I,8,FALSE),0)),
+  * (1+IFERROR(VLOOKUP(DATE(YEAR(B3:B),MONTH(B3:B),1),REM!$A$4:$I,3,FALSE),0))
+  * (1+IFERROR(VLOOKUP(DATE(YEAR(B3:B),MONTH(B3:B),1),REM!$A$4:$I,4,FALSE),0))
+  * (1+IFERROR(VLOOKUP(DATE(YEAR(B3:B),MONTH(B3:B),1),REM!$A$4:$I,5,FALSE),0))
+  * (1+IFERROR(VLOOKUP(DATE(YEAR(B3:B),MONTH(B3:B),1),REM!$A$4:$I,6,FALSE),0))
+  * (1+IFERROR(VLOOKUP(DATE(YEAR(B3:B),MONTH(B3:B),1),REM!$A$4:$I,7,FALSE),0))
+  * (1+IFERROR(VLOOKUP(DATE(YEAR(B3:B),MONTH(B3:B),1),REM!$A$4:$I,8,FALSE),0)),
 "-")))
 ```
 
@@ -122,7 +122,7 @@ Compuesto REM M+1 × … × M+6.
 Usa REM Próx. 12m (col 9).
 ```excel
 =ARRAYFORMULA(IF(C3:C="","-",IFERROR(
-  C3:C * (1+VLOOKUP(EOMONTH(B3:B,0),REM!$A$4:$I,9,FALSE)),
+  C3:C * (1+VLOOKUP(DATE(YEAR(B3:B),MONTH(B3:B),1),REM!$A$4:$I,9,FALSE)),
 "-")))
 ```
 
