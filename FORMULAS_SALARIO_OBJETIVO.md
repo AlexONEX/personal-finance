@@ -3,8 +3,7 @@
 Tab: `Análisis ARS` · Fila 1 = grupos · Fila 2 = headers · Datos desde fila 3
 Columnas ocultas: D, E
 
-**Heurística:** una sola ARRAYFORMULA en fila 3 cubre todo el rango.
-Excepción: D y E usan carry-forward (se referencian a la fila anterior) — per-row o SCAN.
+**Heurística:** una sola ARRAYFORMULA en fila 3 cubre todo el rango. Sin excepciones.
 
 ---
 
