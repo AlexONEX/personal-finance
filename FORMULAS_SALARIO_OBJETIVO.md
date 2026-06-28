@@ -27,20 +27,23 @@ Sueldo neto del mes dividido horas trabajadas (8h/día × días hábiles del mes
 "")))
 ```
 
-### D — Neto/Hora Base *(oculta, per-row)*
-Neto/Hora al momento del último aumento. Se congela cuando cambia el bruto.
-Se referencia a la fila anterior (D2) → no puede ser ARRAYFORMULA simple.
+### D — Neto/Hora Base *(oculta)*
+Neto/Hora al momento del último aumento. Usa primera ocurrencia del bruto actual (el sueldo nunca baja).
 ```excel
-=IF(OR(Ingresos!C3="",Ingresos!C3=0),"",IF(OR(ROW()=3,Ingresos!C3<>Ingresos!C2),C3,D2))
+=ARRAYFORMULA(IF(Ingresos!C3:C="","",
+  INDEX(C3:C, MATCH(Ingresos!C3:C, Ingresos!C3:C, 0))
+))
 ```
-*Copiar hacia abajo en cada fila.*
 
-### E — CER Base *(oculta, per-row)*
-Valor CER al momento del último aumento. Se congela junto con D.
+### E — CER Base *(oculta)*
+Valor CER al momento del último aumento.
 ```excel
-=IF(OR(Ingresos!C3="",Ingresos!C3=0),"",IF(OR(ROW()=3,Ingresos!C3<>Ingresos!C2),VLOOKUP(EOMONTH(Ingresos!B3,0),historic_data!$A$4:$B,2,TRUE),E2))
-```
-*Copiar hacia abajo en cada fila.*
+=ARRAYFORMULA(IF(Ingresos!C3:C="","",
+  IFERROR(VLOOKUP(
+    EOMONTH(INDEX(Ingresos!B3:B, MATCH(Ingresos!C3:C, Ingresos!C3:C, 0)), 0),
+    historic_data!$A$4:$B, 2, TRUE
+  ), "")
+))
 
 ### F — Paridad CER (Neto/Hora)
 > **Q2: ¿Cuánto debería ganar hoy ajustado por CER?**
