@@ -20,30 +20,44 @@ Columnas ocultas: D, E
 ```
 
 ### C — Neto/Hora
-Sueldo neto del mes dividido horas trabajadas (8h/día × días hábiles del mes).
+Referencia directa a Ingresos!P (calculado allí como `Neto / (HorasDiarias × 20)`).
 ```excel
-=ARRAYFORMULA(IF(Ingresos!G3:G="","",IFERROR(
-  Ingresos!G3:G / (NETWORKDAYS(DATE(YEAR(Ingresos!B3:B),MONTH(Ingresos!B3:B),1),EOMONTH(Ingresos!B3:B,0)) * Ingresos!$N$2),
-"")))
+=ARRAYFORMULA(IF(Ingresos!B3:B<>"", Ingresos!P3:P, ""))
 ```
 
 ### D — Neto/Hora Base *(oculta)*
-Neto/Hora al momento del último aumento. Usa primera ocurrencia del bruto actual (el sueldo nunca baja).
+Neto/Hora al momento del último ascenso. SCAN con carry-forward; se resetea cuando `Ingresos!Q` es TRUE.
 ```excel
-=ARRAYFORMULA(IF(Ingresos!C3:C="","",
-  INDEX(C3:C, MATCH(Ingresos!C3:C, Ingresos!C3:C, 0))
-))
+=LET(
+  s, SCAN(0, SEQUENCE(ROWS(C3:C1000)), LAMBDA(acc, i,
+    LET(
+      val, INDEX(C3:C1000, i),
+      asc, INDEX(Ingresos!Q3:Q1000, i),
+      IF(val="", acc,
+        IF(OR(acc=0, acc="", asc=TRUE), val, acc)
+      )
+    )
+  )),
+  ARRAYFORMULA(IF(C3:C1000="", "", s))
+)
 ```
 
 ### E — CER Base *(oculta)*
-Valor CER al momento del último aumento.
+CER al momento del último ascenso. Mismo SCAN pero acumula el CER de cada fila en vez del Neto/Hora.
 ```excel
-=ARRAYFORMULA(IF(Ingresos!C3:C="","",
-  IFERROR(VLOOKUP(
-    EOMONTH(INDEX(Ingresos!B3:B, MATCH(Ingresos!C3:C, Ingresos!C3:C, 0)), 0),
-    historic_data!$A$4:$B, 2, TRUE
-  ), "")
-))
+=LET(
+  s, SCAN(0, SEQUENCE(ROWS(C3:C1000)), LAMBDA(acc, i,
+    LET(
+      val, INDEX(C3:C1000, i),
+      asc, INDEX(Ingresos!Q3:Q1000, i),
+      cer, IFERROR(VLOOKUP(EOMONTH(INDEX(Ingresos!B3:B1000, i), 0), historic_data!$A$4:$B, 2, TRUE), 0),
+      IF(val="", acc,
+        IF(OR(acc=0, acc="", asc=TRUE), cer, acc)
+      )
+    )
+  )),
+  ARRAYFORMULA(IF(C3:C1000="", "", s))
+)
 
 ### F — Paridad CER (Neto/Hora)
 > **Q2: ¿Cuánto debería ganar hoy ajustado por CER?**
